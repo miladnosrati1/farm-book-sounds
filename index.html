@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fa-IR" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>صدای حیوانات مزرعه | کتاب صوتی کودک</title>
+  
+  <!-- SEO & Social Meta -->
+  <meta name="description" content="پخش آنلاین و سریع صدای حیوانات مزرعه برای کتاب چاپی کودک با اسکن کیوآرکد (QR Code)">
+  <meta name="theme-color" content="#4ADE80">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Persian Font: Vazirmatn -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background Decorations -->
+  <div class="cloud cloud-1">☁️</div>
+  <div class="cloud cloud-2">☁️</div>
+  <div class="cloud cloud-3">☀️</div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-badge">🚜 مزرعه شاد حیوانات 🌾</div>
+      <h1 class="main-title">صدای حیوانات مزرعه</h1>
+      <p class="subtitle">همراه صوتی کتاب چاپی کودکان</p>
+    </header>
+
+    <!-- Main Active Player Card -->
+    <main class="player-wrapper">
+      <div class="card active-card" id="player-card">
+        
+        <!-- Autoplay Notice Banner (shown if browser blocks autoplay) -->
+        <div id="autoplay-banner" class="autoplay-banner hidden">
+          <span>👇 روی دکمه سبز رنگ بزنید تا صدا پخش شود:</span>
+        </div>
+
+        <div class="avatar-container" id="avatar-container">
+          <div class="avatar-halo"></div>
+          <div class="avatar-emoji" id="active-emoji">🌾</div>
+          <div class="sound-waves" id="sound-waves">
+            <span class="wave wave-1"></span>
+            <span class="wave wave-2"></span>
+            <span class="wave wave-3"></span>
+            <span class="wave wave-4"></span>
+          </div>
+        </div>
+
+        <div class="animal-info">
+          <h2 class="animal-name" id="active-name">حیوان را انتخاب کنید</h2>
+          <span class="animal-tag" id="active-tag">آماده پخش صدا</span>
+        </div>
+
+        <!-- Audio Player Controls -->
+        <div class="player-controls">
+          <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <div class="time-row">
+            <span id="current-time">00:00</span>
+            <span id="total-duration">--:--</span>
+          </div>
+
+          <div class="buttons-row">
+            <button id="btn-replay" class="btn-circle btn-secondary" title="پخش مجدد" aria-label="تکرار صدا">
+              🔁
+            </button>
+
+            <button id="btn-play-pause" class="btn-pill btn-primary" title="پخش / توقف" aria-label="پخش یا توقف">
+              <span id="play-icon" class="btn-icon">▶️</span>
+              <span id="play-text" class="btn-text">پخش صدا</span>
+            </button>
+
+            <button id="btn-volume" class="btn-circle btn-secondary" title="قطع / وصل صدا" aria-label="تنظیم صدا">
+              <span id="volume-icon">🔊</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct download or share option for parents -->
+        <div class="audio-extra-links">
+          <a id="direct-audio-link" href="#" target="_blank" download class="extra-link">
+            📥 دانلود مستقیم فایل صوتی
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Animal Catalog Grid -->
+    <section class="catalog-section">
+      <div class="section-header">
+        <h3 class="section-title">فهرست همه حیوانات مزرعه</h3>
+        <p class="section-desc">برای شنیدن صدای هر حیوان، روی کارت آن بزنید:</p>
+      </div>
+
+      <div class="animals-grid" id="animals-grid">
+        <!-- Rendered dynamically via app.js -->
+      </div>
+    </section>
+
+    <!-- Parent Guide & Book Info Modal / Accordion -->
+    <footer class="app-footer">
+      <details class="guide-box">
+        <summary>📖 راهنمای کتاب چاپی و کیوآرکدها (ویژه والدین و مربیان)</summary>
+        <div class="guide-content">
+          <p>این سامانه صوتی به عنوان مکمل کتاب چاپی کودک طراحی شده است. هر صفحه از کتاب شامل یک کیوآرکد اختصاصی است که با دوربین گوشی همراه یا تبلت اسکن می‌شود و بلافاصله صدای باکیفیت و بدون تبلیغ حیوان را پخش می‌کند.</p>
+          <ul>
+            <li>بدون نیاز به نصب هیچ‌گونه اپلیکیشن</li>
+            <li>کاملاً رایگان، سبک و سازگار با اینترنت همراه</li>
+            <li>کیفیت چاپی کیوآرکدها به صورت ۳۰۰DPI و وکتور SVG</li>
+          </ul>
+        </div>
+      </details>
+      <div class="footer-credit">
+        طراحی و توسعه برای کتاب کودک • نسخه گیتهاب پیجز
+      </div>
+    </footer>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="main-audio" preload="metadata"></audio>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
