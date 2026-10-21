@@ -247,36 +247,41 @@ function zoomToHabitat(habitatElem) {
   const resetBtn = document.getElementById('farm-zoom-reset-btn');
   if (!landscape || !container || !habitatElem) return;
 
-  // Temporarily reset zoom to compute true unscaled geometry
-  const wasZoomed = landscape.classList.contains('is-zoomed-habitat');
-  if (wasZoomed) {
-    landscape.classList.remove('is-zoomed-habitat');
-    landscape.style.transform = '';
-  }
+  // Temporarily reset previous zoom without transition to measure true unscaled geometry
+  landscape.style.transition = 'none';
+  landscape.classList.remove('is-zoomed-habitat');
+  landscape.style.transform = 'rotateX(15deg) rotateY(0deg) scale(0.97)';
+  landscape.style.transformOrigin = '50% 50%';
+  // Force reflow so getBoundingClientRect reflects the base unzoomed diorama!
+  void landscape.offsetHeight;
 
-  // Get true bounding rects regardless of CSS nesting (e.g. duck in pond)
+  // Get true unscaled bounding rects regardless of CSS nesting or RTL
   const hRect = habitatElem.getBoundingClientRect();
   const cRect = container.getBoundingClientRect();
   const lRect = landscape.getBoundingClientRect();
 
-  // Habitat center point relative to unscaled landscape
-  const habitatCenterX = (hRect.left + hRect.width / 2) - lRect.left;
-  const habitatCenterY = (hRect.top + hRect.height / 2) - lRect.top;
+  // Target point relative to landscape
+  const originX = Math.round(hRect.left + hRect.width / 2 - lRect.left);
+  const originY = Math.round(hRect.top + hRect.height / 2 - lRect.top);
 
-  // Center coordinates of container viewport
-  const containerCenterX = cRect.width / 2;
-  const containerCenterY = cRect.height / 2;
+  // Current animal center relative to container viewport
+  const currentScreenX = hRect.left + hRect.width / 2 - cRect.left;
+  const currentScreenY = hRect.top + hRect.height / 2 - cRect.top;
 
-  // Cinematic zoom scale
+  // Viewport center
+  const targetScreenX = cRect.width / 2;
+  const targetScreenY = cRect.height / 2;
+
+  // Translation needed to center the animal (works identically for left and right half animals!)
+  const transX = Math.round(targetScreenX - currentScreenX);
+  const transY = Math.round(targetScreenY - currentScreenY);
+
   const zoomScale = 1.85;
 
-  // Mathematically align animal center point precisely with viewport center!
-  const transX = Math.round(containerCenterX - (habitatCenterX * zoomScale));
-  const transY = Math.round(containerCenterY - (habitatCenterY * zoomScale));
-
-  landscape.style.transformOrigin = '0 0';
+  // Re-enable smooth transition
   landscape.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-  landscape.style.transform = `translate3d(${transX}px, ${transY}px, 45px) scale(${zoomScale}) rotateX(8deg)`;
+  landscape.style.transformOrigin = `${originX}px ${originY}px`;
+  landscape.style.transform = `translate3d(${transX}px, ${transY}px, 50px) scale(${zoomScale}) rotateX(8deg)`;
   landscape.classList.add('is-zoomed-habitat');
 
   if (resetBtn) resetBtn.classList.remove('hidden');
@@ -879,8 +884,8 @@ const runner = {
   baseY: 0,
   jumpY: 0,
   vy: 0,
-  gravity: 0.48,
-  jumpStrength: -11.0,
+  gravity: 0.38,        // Buoyant, floaty descent
+  jumpStrength: -10.5,  // Snappy, joyful launch
   isJumping: false,
   isDucking: false,
   duckTimer: 0,
@@ -1281,10 +1286,12 @@ function updateSubwayState() {
   const targetX = lanePositions[runner.currentLane];
   runner.x += (targetX - runner.x) * 0.26;
 
-  // Jump physics
+  // Jump physics with buoyant float at apex
   if (runner.isJumping) {
     runner.jumpY -= runner.vy;
-    runner.vy += runner.gravity;
+    // Hang-time: slightly reduce gravity near the peak so the animal floats over hurdles
+    const hangGravity = (Math.abs(runner.vy) < 2.0) ? (runner.gravity * 0.42) : runner.gravity;
+    runner.vy += hangGravity;
 
     if (runner.jumpY <= 0) {
       runner.jumpY = 0;
@@ -1606,40 +1613,71 @@ function updateObstacles() {
     const ob = activeObstacles[i];
     ob.z += ob.speed;
 
-    // Generous, kid-forgiving collision window
-    if (ob.z >= 0.88 && ob.z <= 1.01) {
-      let laneBlocked = false;
+    // Check if the runner's lane is affected by this obstacle
+    let laneBlocked = false;
+    if (ob.isFullRoad) {
+      // Spans ALL 3 lanes (no dodging possible)
+      laneBlocked = true;
+    } else if (ob.occupiedLanes && Array.isArray(ob.occupiedLanes)) {
+      // Spans multiple lanes (e.g. [0, 1] for Giant Tractor)
+      laneBlocked = ob.occupiedLanes.includes(runner.currentLane);
+    } else {
+      // Single lane
+      laneBlocked = (ob.lane === runner.currentLane);
+    }
 
-      if (ob.isFullRoad) {
-        // Spans ALL 3 lanes (no dodging possible)
-        laneBlocked = true;
-      } else if (ob.occupiedLanes && Array.isArray(ob.occupiedLanes)) {
-        // Spans multiple lanes (e.g. [0, 1] for Giant Tractor)
-        laneBlocked = ob.occupiedLanes.includes(runner.currentLane);
-      } else {
-        // Single lane
-        laneBlocked = (ob.lane === runner.currentLane);
+    if (laneBlocked && !ob.cleared) {
+      // 1. LOW OBSTACLES (JUMP REQUIRED: Ranch Fence, Log, Mud Canal, Hay)
+      if (ob.def.type === 'low') {
+        // SUCCESSFUL JUMP CLEARANCE:
+        // If the runner is airborne anywhere in the approach or jump zone (z: 0.65 to 1.00),
+        // the hurdle is CLEARED! It will NEVER collide with the animal on landing!
+        if (runner.isJumping && runner.jumpY > 10 && ob.z >= 0.65 && ob.z <= 1.00) {
+          ob.cleared = true;
+          floatingTexts.push({
+            x: runner.x,
+            y: runner.baseY - runner.jumpY - 24,
+            text: "پرش عالی! 🌟",
+            alpha: 1.0
+          });
+        }
+        // COLLISION CHECK:
+        // Only if the hurdle reaches the runner's feet (z >= 0.90) and runner is NOT jumping:
+        else if (ob.z >= 0.90 && ob.z <= 1.02) {
+          if (!runner.isJumping || runner.jumpY <= 10) {
+            triggerGameOver();
+            return;
+          }
+        }
       }
 
-      if (laneBlocked) {
-        let isHit = false;
-
-        if (ob.def.type === 'low') {
-          // Low obstacle requires JUMP (forgiving clearance of 16px)
-          if (!runner.isJumping || runner.jumpY < 16) {
-            isHit = true;
-          }
-        } else if (ob.def.type === 'high') {
-          // High obstacle requires DUCK / SLIDE
-          if (!runner.isDucking) {
-            isHit = true;
-          }
-        } else if (ob.def.type === 'blocker') {
-          // Blocker cannot be jumped or ducked over
-          isHit = true;
+      // 2. HIGH OBSTACLES (DUCK REQUIRED: Overhead Branch, Clothesline)
+      else if (ob.def.type === 'high') {
+        // SUCCESSFUL SLIDE CLEARANCE:
+        // If the runner is ducking as the overhead hurdle approaches or passes (z: 0.65 to 1.00),
+        // it is CLEARED! Standing up afterward will NOT kill the animal!
+        if (runner.isDucking && ob.z >= 0.65 && ob.z <= 1.00) {
+          ob.cleared = true;
+          floatingTexts.push({
+            x: runner.x,
+            y: runner.baseY - 20,
+            text: "اسلاید عالی! 💨",
+            alpha: 1.0
+          });
         }
+        // COLLISION CHECK:
+        // Only if the hurdle reaches the runner's head (z >= 0.90) and runner is NOT ducking:
+        else if (ob.z >= 0.90 && ob.z <= 1.02) {
+          if (!runner.isDucking) {
+            triggerGameOver();
+            return;
+          }
+        }
+      }
 
-        if (isHit) {
+      // 3. BLOCKERS (GIANT TRACTOR / GIANT TREES - CANNOT BE JUMPED OR DUCKED)
+      else if (ob.def.type === 'blocker') {
+        if (ob.z >= 0.88 && ob.z <= 1.02) {
           triggerGameOver();
           return;
         }
