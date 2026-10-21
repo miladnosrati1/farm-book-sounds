@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=3.4">
+  <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
   <!-- Background Decorations -->
@@ -135,6 +135,10 @@
 
       <!-- 1. Interactive 3D Diorama Farm Landscape -->
       <div class="farm-landscape-container" id="farm-view">
+        <!-- Floating Zoom Out Reset Button (visible when zoomed into an animal) -->
+        <button class="farm-zoom-reset-btn hidden" id="farm-zoom-reset-btn" title="بازگشت به نمای کامل مزرعه">
+          🔍 نمای کامل مزرعه
+        </button>
         <div class="farm-landscape farm-diorama-3d" id="farm-landscape">
           
           <!-- 3D Sky & Distant Atmosphere -->
@@ -181,7 +185,7 @@
             <div class="habitat-prop coop-prop">🛖</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">قُد قُد قُدا!</div>
-              <div class="animal-sprite sprite-hen">🐔</div>
+              <div class="animal-sprite sprite-hen">🐓</div>
               <div class="animal-label">مرغ</div>
               <div class="active-beacon"></div>
             </div>
@@ -311,6 +315,23 @@
       </div>
     </section>
 
+    <!-- Floating Sticky Audio Player Bar (Always reachable without scrolling) -->
+    <aside class="sticky-audio-bar" id="sticky-audio-bar" aria-label="کنترل سریع پخش صدا">
+      <div class="sticky-audio-content">
+        <div class="sticky-animal-meta">
+          <span class="sticky-animal-emoji" id="sticky-emoji">🐓</span>
+          <div class="sticky-animal-details">
+            <span class="sticky-animal-name" id="sticky-name">مرغ</span>
+            <span class="sticky-animal-sound" id="sticky-sound">«قُد قُد قُدا!»</span>
+          </div>
+        </div>
+        <button class="sticky-play-btn" id="sticky-play-btn" aria-label="پخش صدای حیوان">
+          <span class="sticky-play-icon" id="sticky-play-icon">▶️</span>
+          <span class="sticky-play-text" id="sticky-play-text">پخش صدا</span>
+        </button>
+      </div>
+    </aside>
+
     <!-- Parent Guide & Book Info Modal / Accordion -->
     <footer class="app-footer">
       <details class="guide-box">
@@ -347,7 +368,7 @@
 
       <!-- Active Mascot & Food Pill -->
       <div class="hud-pill hud-food-pill">
-        <span class="hud-char-avatar" id="hud-char-avatar">🐔</span>
+        <span class="hud-char-avatar" id="hud-char-avatar">🐓</span>
         <span class="hud-food-icon" id="hud-food-icon">🌽</span>
         <strong id="hud-food-count">۰</strong>
       </div>
@@ -379,7 +400,7 @@
     <!-- Ready / Start Screen Overlay -->
     <div class="game-overlay-screen" id="game-start-screen">
       <div class="overlay-card start-card">
-        <div class="overlay-mascot" id="start-screen-emoji">🐔</div>
+        <div class="overlay-mascot" id="start-screen-emoji">🐓</div>
         <h3 class="overlay-title" id="start-screen-title">بازی دونده مزرعه!</h3>
         <p class="overlay-desc" id="start-screen-desc">
           به <strong id="start-animal-name">مرغ</strong> کمک کن تا <strong id="start-food-name">ذرت‌های خوشمزه</strong> رو جمع کنه و از روی موانع بپره!
@@ -465,6 +486,6 @@
   <canvas id="confetti-canvas"></canvas>
 
   <!-- Application Logic -->
-  <script src="app.js?v=3.4"></script>
+  <script src="app.js?v=3.5"></script>
 </body>
 </html>

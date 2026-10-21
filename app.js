@@ -9,7 +9,7 @@ const FALLBACK_ANIMALS = [
   {
     id: "hen",
     name: "مرغ",
-    emoji: "🐔",
+    emoji: "🐓",
     audio: "audio/hen.mp3",
     sound_text: "قُد قُد قُدا!",
     habitat: "مرغ‌دانی و لانه کاه",
@@ -231,13 +231,50 @@ function getUrlAnimalId() {
   return 'hen';
 }
 
+// Zoom into selected animal station inside 3D farm diorama
+function zoomToHabitat(habitatElem) {
+  const landscape = document.getElementById('farm-landscape');
+  const resetBtn = document.getElementById('farm-zoom-reset-btn');
+  if (!landscape || !habitatElem) return;
+
+  const hLeft = habitatElem.offsetLeft + (habitatElem.offsetWidth / 2);
+  const hTop = habitatElem.offsetTop + (habitatElem.offsetHeight / 2);
+
+  const originX = Math.round((hLeft / landscape.offsetWidth) * 100);
+  const originY = Math.round((hTop / landscape.offsetHeight) * 100);
+
+  landscape.style.transformOrigin = `${originX}% ${originY}%`;
+  landscape.classList.add('is-zoomed-habitat');
+  if (resetBtn) resetBtn.classList.remove('hidden');
+}
+
+// Zoom out to view full 3D farm diorama
+function zoomOutFarm() {
+  const landscape = document.getElementById('farm-landscape');
+  const resetBtn = document.getElementById('farm-zoom-reset-btn');
+  if (!landscape) return;
+
+  landscape.classList.remove('is-zoomed-habitat');
+  landscape.style.transformOrigin = '50% 50%';
+  if (resetBtn) resetBtn.classList.add('hidden');
+}
+
 // Setup click and keyboard handlers on the Interactive Farm Habitats
 function setupFarmHabitats() {
+  const resetBtn = document.getElementById('farm-zoom-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      zoomOutFarm();
+    });
+  }
+
   const habitats = document.querySelectorAll('.farm-habitat');
   habitats.forEach(habitat => {
     const animalId = habitat.getAttribute('data-animal-id');
     
     habitat.addEventListener('click', () => {
+      zoomToHabitat(habitat);
       selectAnimal(animalId, false);
       playAudio();
       triggerMiniConfetti();
@@ -246,11 +283,45 @@ function setupFarmHabitats() {
     habitat.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
+        zoomToHabitat(habitat);
         selectAnimal(animalId, false);
         playAudio();
       }
     });
   });
+
+  // Pan / drag / swipe detection on farm to zoom-out smoothly
+  const farmViewEl = document.getElementById('farm-view');
+  if (farmViewEl) {
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    farmViewEl.addEventListener('mousedown', (e) => {
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+    });
+
+    farmViewEl.addEventListener('mousemove', (e) => {
+      if (e.buttons > 0) {
+        const dist = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
+        if (dist > 25) zoomOutFarm();
+      }
+    });
+
+    farmViewEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    farmViewEl.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        const dist = Math.hypot(e.touches[0].clientX - dragStartX, e.touches[0].clientY - dragStartY);
+        if (dist > 25) zoomOutFarm();
+      }
+    }, { passive: true });
+  }
 }
 
 // Render fallback / alternative simple grid
@@ -309,6 +380,14 @@ function selectAnimal(animalId, isInitialLoad = false) {
     calloutFoodBadge.textContent = `جمع‌آوری ${found.food_name || 'غذا'} ${found.food_emoji || '🌾'}`;
   }
   document.title = `صدای ${found.name} ${found.emoji} | کتاب کودک`;
+
+  // Update Persistent Sticky Audio Bar (Always visible without scrolling)
+  const stickyEmoji = document.getElementById('sticky-emoji');
+  const stickyName = document.getElementById('sticky-name');
+  const stickySound = document.getElementById('sticky-sound');
+  if (stickyEmoji) stickyEmoji.textContent = found.emoji;
+  if (stickyName) stickyName.textContent = found.name;
+  if (stickySound) stickySound.textContent = `«${found.sound_text || found.name}»`;
 
   // 2. Update Direct Audio Download Link
   directAudioLink.href = found.audio;
@@ -415,11 +494,32 @@ function updatePlayingState(playing) {
       activeTag.textContent = `شناسه: ${currentAnimal.id} • آماده پخش`;
     }
   }
+
+  // Update Sticky Audio Bar play button state
+  const stickyPlayBtn = document.getElementById('sticky-play-btn');
+  const stickyPlayIcon = document.getElementById('sticky-play-icon');
+  const stickyPlayText = document.getElementById('sticky-play-text');
+  if (stickyPlayBtn && stickyPlayIcon && stickyPlayText) {
+    if (playing) {
+      stickyPlayBtn.classList.add('is-playing');
+      stickyPlayIcon.textContent = '⏸️';
+      stickyPlayText.textContent = 'توقف صدا';
+    } else {
+      stickyPlayBtn.classList.remove('is-playing');
+      stickyPlayIcon.textContent = '▶️';
+      stickyPlayText.textContent = 'پخش صدا';
+    }
+  }
 }
 
 // Setup Event Listeners
 function setupEventListeners() {
   btnPlayPause.addEventListener('click', togglePlayPause);
+
+  const stickyPlayBtn = document.getElementById('sticky-play-btn');
+  if (stickyPlayBtn) {
+    stickyPlayBtn.addEventListener('click', togglePlayPause);
+  }
 
   btnReplay.addEventListener('click', () => {
     mainAudio.currentTime = 0;
@@ -1512,13 +1612,476 @@ function drawSubwaySurfersFrame() {
     }
   });
 
-  // 7. Render The Player (Selected Animal Running Forward!)
+// ==========================================================================
+// 3D THIRD-PERSON REAR-VIEW ANIMAL RUNNER RENDERER (Camera behind animal!)
+// ==========================================================================
+function drawAnimalFromBehind(ctx, animalId, x, y, runner) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Tilt during lane switch
+  const laneTilt = (runner.targetLane - runner.currentLane) * 0.15;
+  ctx.rotate(laneTilt);
+
+  // If jumping, tilt slightly forward-up and stretch vertically
+  if (runner.isJumping) {
+    ctx.rotate(-0.06);
+    ctx.scale(0.96, 1.08);
+  } else if (runner.isDucking) {
+    // If ducking, squish down wide
+    ctx.translate(0, 16);
+    ctx.scale(1.25, 0.55);
+  }
+
+  const runCycle = gameFrame * 0.32;
+  const legStride = Math.sin(runCycle) * 14;
+  const tailSway = Math.sin(runCycle * 0.8) * 0.4;
+  const isAirborne = runner.isJumping;
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  switch (animalId) {
+    case 'hen': {
+      // 1. HEN / FULL BODY CHICKEN FROM BEHIND
+      // Yellow feet kicking back
+      ctx.fillStyle = '#F59E0B';
+      const f1Y = isAirborne ? 12 : Math.max(0, legStride);
+      const f2Y = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.fillRect(-14, -6 + f1Y, 6, 8);
+      ctx.fillRect(8, -6 + f2Y, 6, 8);
+
+      // Plump feathered round body
+      const bodyGrad = ctx.createRadialGradient(-4, -40, 6, 0, -38, 38);
+      bodyGrad.addColorStop(0, '#FFFBEB');
+      bodyGrad.addColorStop(0.6, '#FDE68A');
+      bodyGrad.addColorStop(1, '#D97706');
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -36, 28, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wing flaps on sides
+      ctx.fillStyle = '#B45309';
+      ctx.beginPath();
+      ctx.ellipse(-26, -34, 6, 18, -0.2, 0, Math.PI * 2);
+      ctx.ellipse(26, -34, 6, 18, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Perky tail feathers fan at the rear (bobbing with run)
+      const tailBob = Math.sin(runCycle) * 6;
+      ctx.save();
+      ctx.translate(0, -48 + tailBob);
+      ctx.fillStyle = '#B45309';
+      ctx.beginPath();
+      ctx.ellipse(-10, -12, 7, 18, -0.35, 0, Math.PI * 2);
+      ctx.ellipse(0, -16, 8, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(10, -12, 7, 18, 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#92400E';
+      ctx.beginPath();
+      ctx.ellipse(0, -14, 5, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Red chicken comb visible at front-top
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(-6, -68, 6, 0, Math.PI * 2);
+      ctx.arc(0, -72, 7, 0, Math.PI * 2);
+      ctx.arc(6, -68, 6, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'cow': {
+      // 2. COW FROM BEHIND (Spotted Dairy Cow)
+      ctx.fillStyle = '#1E293B';
+      const h1 = isAirborne ? 14 : Math.max(0, legStride);
+      const h2 = isAirborne ? 14 : Math.max(0, -legStride);
+      ctx.fillRect(-22, -8 + h1, 14, 10);
+      ctx.fillRect(8, -8 + h2, 14, 10);
+
+      // Sturdy bovine legs
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-22, -22, 14, 16);
+      ctx.fillRect(8, -22, 14, 16);
+
+      // Round wide bovine rump
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, -42, 38, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Big irregular black Holstein spots
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(-16, -48, 14, 12, 0.3, 0, Math.PI * 2);
+      ctx.ellipse(18, -38, 12, 16, -0.2, 0, Math.PI * 2);
+      ctx.ellipse(-8, -26, 9, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cow Tail with swishing tassel
+      ctx.save();
+      ctx.translate(0, -42);
+      ctx.rotate(tailSway);
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(8, 18, 4, 30);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(4, 32, 6, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Bovine ears & horns visible forward
+      ctx.fillStyle = '#F8FAFC';
+      ctx.beginPath();
+      ctx.ellipse(-32, -62, 12, 6, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(32, -62, 12, 6, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#F472B6';
+      ctx.beginPath();
+      ctx.ellipse(-32, -62, 8, 3, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(32, -62, 8, 3, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FEF08A';
+      ctx.beginPath();
+      ctx.ellipse(-16, -72, 4, 8, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(16, -72, 4, 8, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'sheep': {
+      // 3. SHEEP FROM BEHIND (Fluffy Cloud of Wool)
+      ctx.fillStyle = '#0F172A';
+      const s1 = isAirborne ? 12 : Math.max(0, legStride);
+      const s2 = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.fillRect(-18, -6 + s1, 10, 8);
+      ctx.fillRect(8, -6 + s2, 10, 8);
+
+      const woolGrad = ctx.createRadialGradient(0, -42, 10, 0, -42, 40);
+      woolGrad.addColorStop(0, '#FFFFFF');
+      woolGrad.addColorStop(0.8, '#F1F5F9');
+      woolGrad.addColorStop(1, '#CBD5E1');
+      ctx.fillStyle = woolGrad;
+
+      const puffs = [
+        [-20, -52, 14], [0, -58, 16], [20, -52, 14],
+        [-28, -38, 16], [-10, -38, 18], [10, -38, 18], [28, -38, 16],
+        [-20, -24, 15], [0, -22, 16], [20, -24, 15]
+      ];
+      ctx.beginPath();
+      puffs.forEach(([px, py, pr]) => {
+        ctx.moveTo(px + pr, py);
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+      });
+      ctx.fill();
+
+      // Cute wagging tail
+      const tailWag = Math.sin(runCycle * 1.5) * 8;
+      ctx.fillStyle = '#E2E8F0';
+      ctx.beginPath();
+      ctx.ellipse(tailWag, -32, 9, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.ellipse(-26, -60, 8, 4, -0.5, 0, Math.PI * 2);
+      ctx.ellipse(26, -60, 8, 4, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'goose': {
+      // 4. GOOSE FROM BEHIND
+      ctx.fillStyle = '#EA580C';
+      const g1 = isAirborne ? 12 : Math.max(0, legStride);
+      const g2 = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.beginPath();
+      ctx.ellipse(-16, -4 + g1, 10, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(16, -4 + g2, 10, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const gooseGrad = ctx.createRadialGradient(0, -36, 8, 0, -36, 35);
+      gooseGrad.addColorStop(0, '#FFFFFF');
+      gooseGrad.addColorStop(0.7, '#F8FAFC');
+      gooseGrad.addColorStop(1, '#CBD5E1');
+      ctx.fillStyle = gooseGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -34, 26, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#E2E8F0';
+      ctx.beginPath();
+      ctx.moveTo(-10, -42);
+      ctx.lineTo(0, -56);
+      ctx.lineTo(10, -42);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, -66, 9, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#EA580C';
+      ctx.beginPath();
+      ctx.ellipse(0, -82, 5, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'duck': {
+      // 5. DUCK FROM BEHIND (Mallard)
+      ctx.fillStyle = '#EA580C';
+      const d1 = isAirborne ? 10 : Math.max(0, legStride);
+      const d2 = isAirborne ? 10 : Math.max(0, -legStride);
+      ctx.beginPath();
+      ctx.ellipse(-14, -4 + d1, 9, 5, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(14, -4 + d2, 9, 5, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      const duckGrad = ctx.createRadialGradient(0, -32, 8, 0, -32, 32);
+      duckGrad.addColorStop(0, '#78350F');
+      duckGrad.addColorStop(0.6, '#451A03');
+      duckGrad.addColorStop(1, '#1C1917');
+      ctx.fillStyle = duckGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -30, 24, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(-24, -34, 5, 12);
+      ctx.fillRect(19, -34, 5, 12);
+
+      // Curled drake tail
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, -44, 8, 0.2, Math.PI * 1.2, false);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-10, -52, 20, 3);
+      ctx.fillStyle = '#065F46';
+      ctx.beginPath();
+      ctx.ellipse(0, -62, 12, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'donkey': {
+      // 6. DONKEY FROM BEHIND
+      ctx.fillStyle = '#1E293B';
+      const dn1 = isAirborne ? 12 : Math.max(0, legStride);
+      const dn2 = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.fillRect(-20, -6 + dn1, 12, 9);
+      ctx.fillRect(8, -6 + dn2, 12, 9);
+
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillRect(-20, -22, 12, 18);
+      ctx.fillRect(8, -22, 12, 18);
+
+      ctx.fillStyle = '#64748B';
+      ctx.beginPath();
+      ctx.ellipse(0, -40, 32, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, -60);
+      ctx.lineTo(0, -20);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(0, -38);
+      ctx.rotate(tailSway * 1.2);
+      ctx.strokeStyle = '#64748B';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 24);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(0, 28, 5, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#64748B';
+      ctx.beginPath();
+      ctx.ellipse(-14, -76, 7, 20, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(14, -76, 7, 20, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#F472B6';
+      ctx.beginPath();
+      ctx.ellipse(-14, -76, 4, 15, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(14, -76, 4, 15, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'dog': {
+      // 7. DOG FROM BEHIND
+      ctx.fillStyle = '#9A3412';
+      const dg1 = isAirborne ? 12 : Math.max(0, legStride);
+      const dg2 = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.beginPath();
+      ctx.ellipse(-16, -4 + dg1, 9, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(16, -4 + dg2, 9, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1C1917';
+      ctx.beginPath();
+      ctx.arc(-16, -4 + dg1, 3.5, 0, Math.PI * 2);
+      ctx.arc(16, -4 + dg2, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      const dogGrad = ctx.createRadialGradient(0, -36, 8, 0, -36, 32);
+      dogGrad.addColorStop(0, '#F59E0B');
+      dogGrad.addColorStop(0.7, '#D97706');
+      dogGrad.addColorStop(1, '#B45309');
+      ctx.fillStyle = dogGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -34, 28, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const dogTailWag = Math.sin(runCycle * 1.8) * 0.55;
+      ctx.save();
+      ctx.translate(0, -42);
+      ctx.rotate(dogTailWag);
+      ctx.fillStyle = '#D97706';
+      ctx.beginPath();
+      ctx.ellipse(0, -18, 7, 18, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FEF3C7';
+      ctx.beginPath();
+      ctx.arc(0, -32, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#92400E';
+      ctx.beginPath();
+      ctx.ellipse(-20, -56, 8, 12, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(20, -56, 8, 12, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'horse': {
+      // 8. HORSE FROM BEHIND
+      ctx.fillStyle = '#0F172A';
+      const hr1 = isAirborne ? 14 : Math.max(0, legStride);
+      const hr2 = isAirborne ? 14 : Math.max(0, -legStride);
+      ctx.fillRect(-22, -8 + hr1, 14, 10);
+      ctx.fillRect(8, -8 + hr2, 14, 10);
+
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-22, -26, 14, 20);
+      ctx.fillRect(8, -26, 14, 20);
+
+      const horseGrad = ctx.createRadialGradient(-6, -46, 10, 0, -44, 38);
+      horseGrad.addColorStop(0, '#B45309');
+      horseGrad.addColorStop(0.6, '#92400E');
+      horseGrad.addColorStop(1, '#78350F');
+      ctx.fillStyle = horseGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -44, 34, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const tailStream = Math.sin(runCycle * 0.9) * 12;
+      ctx.save();
+      ctx.translate(0, -44);
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.moveTo(-6, 0);
+      ctx.quadraticCurveTo(tailStream - 10, 20, tailStream - 4, 38);
+      ctx.quadraticCurveTo(tailStream + 10, 20, 6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#92400E';
+      ctx.beginPath();
+      ctx.ellipse(-12, -74, 5, 12, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(12, -74, 5, 12, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.ellipse(0, -70, 6, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case 'goat': {
+      // 9. GOAT FROM BEHIND
+      ctx.fillStyle = '#1E293B';
+      const gt1 = isAirborne ? 12 : Math.max(0, legStride);
+      const gt2 = isAirborne ? 12 : Math.max(0, -legStride);
+      ctx.fillRect(-16, -6 + gt1, 9, 8);
+      ctx.fillRect(7, -6 + gt2, 9, 8);
+
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(-16, -22, 9, 18);
+      ctx.fillRect(7, -22, 9, 18);
+
+      const goatGrad = ctx.createRadialGradient(0, -36, 8, 0, -36, 30);
+      goatGrad.addColorStop(0, '#FEF9C3');
+      goatGrad.addColorStop(0.7, '#FDE047');
+      goatGrad.addColorStop(1, '#CA8A04');
+      ctx.fillStyle = goatGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -34, 26, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const goatTail = Math.sin(runCycle * 1.4) * 5;
+      ctx.fillStyle = '#CA8A04';
+      ctx.beginPath();
+      ctx.moveTo(-6, -44);
+      ctx.lineTo(goatTail, -58);
+      ctx.lineTo(6, -44);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#78350F';
+      ctx.beginPath();
+      ctx.ellipse(-12, -68, 4, 12, -0.35, 0, Math.PI * 2);
+      ctx.ellipse(12, -68, 4, 12, 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FDE047';
+      ctx.beginPath();
+      ctx.ellipse(-24, -54, 7, 4, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(24, -54, 7, 4, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    default: {
+      ctx.font = "80px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(runner.emoji || '🐾', 0, 0);
+    }
+  }
+
+  ctx.restore();
+}
+
+  // 7. Render The Player (Third-Person Rear Camera Running View!)
   const animal = currentAnimal || animals[0];
   const playerRenderY = (runner.baseY - runner.jumpY) + runner.runBob;
   const playerRenderX = runner.x;
 
   gameCtx.save();
-  gameCtx.globalAlpha = 1.0; // 100% solid opacity - NO watermark effect!
+  gameCtx.globalAlpha = 1.0;
 
   // 1. Crisp ground shadow firmly on the track surface (stays on ground during jumps)
   gameCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -1527,51 +2090,18 @@ function drawSubwaySurfersFrame() {
   gameCtx.ellipse(playerRenderX, runner.baseY + 4, 38 * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
   gameCtx.fill();
 
-  // Reset fillStyle to solid black before rendering emoji text!
-  gameCtx.fillStyle = '#000000';
-  gameCtx.textAlign = "center";
-  gameCtx.textBaseline = "bottom";
-
-  const emojiFont = "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
-
-  // Add subtle shadow to the animal character for depth and pop
-  gameCtx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-  gameCtx.shadowBlur = 6;
-  gameCtx.shadowOffsetY = 3;
-
+  // Draw sliding dust if ducking
   if (runner.isDucking) {
-    // Ducking / Sliding posture (squished & low)
-    gameCtx.save();
-    gameCtx.translate(playerRenderX, playerRenderY + 16);
-    gameCtx.scale(1.22, 0.6);
-    gameCtx.font = `86px ${emojiFont}`;
-    gameCtx.fillText(animal.emoji, 0, 0);
-    gameCtx.restore();
-
-    // Dust particles when sliding
-    gameCtx.save();
-    gameCtx.shadowColor = 'transparent';
-    gameCtx.font = `24px ${emojiFont}`;
-    gameCtx.fillText("💨", playerRenderX - 35, runner.baseY);
-    gameCtx.restore();
-  } else if (runner.isJumping) {
-    // Jumping posture (high arc, slight joyful tilt)
-    gameCtx.save();
-    gameCtx.translate(playerRenderX, playerRenderY);
-    gameCtx.rotate(-0.08);
-    gameCtx.font = `88px ${emojiFont}`;
-    gameCtx.fillText(animal.emoji, 0, 0);
-    gameCtx.restore();
-  } else {
-    // Running forward firmly on the ground!
-    const laneTilt = (runner.targetLane - runner.currentLane) * 0.12;
-    gameCtx.save();
-    gameCtx.translate(playerRenderX, playerRenderY);
-    gameCtx.rotate(laneTilt);
-    gameCtx.font = `86px ${emojiFont}`;
-    gameCtx.fillText(animal.emoji, 0, 0);
-    gameCtx.restore();
+    gameCtx.fillStyle = 'rgba(217, 119, 6, 0.5)';
+    gameCtx.beginPath();
+    gameCtx.arc(playerRenderX - 30, runner.baseY - 4, 8, 0, Math.PI * 2);
+    gameCtx.arc(playerRenderX + 30, runner.baseY - 4, 8, 0, Math.PI * 2);
+    gameCtx.fill();
   }
+
+  // Draw the custom 3D rear-view animal character!
+  drawAnimalFromBehind(gameCtx, animal.id, playerRenderX, playerRenderY, runner);
+
   gameCtx.restore();
 
   // 8. Render Floating Score Texts
