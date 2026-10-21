@@ -836,7 +836,7 @@ function resizeGameCanvas() {
     centerX + laneStep
   ];
 
-  runner.baseY = trackBottomY - runner.height;
+  runner.baseY = trackBottomY - 10;
   runner.x = lanePositions[runner.currentLane];
 }
 
@@ -1072,6 +1072,7 @@ function resetGameEntities() {
   runner.currentLane = 1;
   runner.targetLane = 1;
   runner.x = lanePositions[1];
+  runner.baseY = trackBottomY - 10;
   runner.jumpY = 0;
   runner.vy = 0;
   runner.isJumping = false;
@@ -1460,7 +1461,9 @@ function drawSubwaySurfersFrame() {
       const p = projectLanePoint(food.lane, food.z);
       const fontSize = Math.floor(48 * p.scale);
       gameCtx.save();
-      gameCtx.font = `${fontSize}px sans-serif`;
+      gameCtx.globalAlpha = 1.0;
+      gameCtx.fillStyle = '#000000';
+      gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
       gameCtx.textAlign = "center";
       gameCtx.textBaseline = "middle";
 
@@ -1477,12 +1480,14 @@ function drawSubwaySurfersFrame() {
       const p = projectLanePoint(ob.lane, ob.z);
       const fontSize = Math.floor(58 * p.scale);
       gameCtx.save();
+      gameCtx.globalAlpha = 1.0;
       gameCtx.textAlign = "center";
       gameCtx.textBaseline = "bottom";
 
       if (ob.def.type === 'high') {
         // High overhead obstacle (hanging line / branch)
-        gameCtx.font = `${fontSize}px sans-serif`;
+        gameCtx.fillStyle = '#000000';
+        gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
         gameCtx.fillText(ob.def.emoji, p.x, p.y - 50 * p.scale);
 
         // Hanging warning sign
@@ -1493,7 +1498,14 @@ function drawSubwaySurfersFrame() {
         gameCtx.fillText("بشین! 👇", p.x, p.y - 75 * p.scale);
       } else {
         // Low or Blocker obstacle on the ground
-        gameCtx.font = `${fontSize}px sans-serif`;
+        // Ground shadow under obstacle
+        gameCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        gameCtx.beginPath();
+        gameCtx.ellipse(p.x, p.y + 2 * p.scale, (fontSize * 0.42), 6 * p.scale, 0, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        gameCtx.fillStyle = '#000000';
+        gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
         gameCtx.fillText(ob.def.emoji, p.x, p.y);
       }
       gameCtx.restore();
@@ -1506,41 +1518,59 @@ function drawSubwaySurfersFrame() {
   const playerRenderX = runner.x;
 
   gameCtx.save();
+  gameCtx.globalAlpha = 1.0; // 100% solid opacity - NO watermark effect!
+
+  // 1. Crisp ground shadow firmly on the track surface (stays on ground during jumps)
+  gameCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  gameCtx.beginPath();
+  const shadowScale = Math.max(0.2, 1 - (runner.jumpY / 130));
+  gameCtx.ellipse(playerRenderX, runner.baseY + 4, 38 * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
+  gameCtx.fill();
+
+  // Reset fillStyle to solid black before rendering emoji text!
+  gameCtx.fillStyle = '#000000';
   gameCtx.textAlign = "center";
   gameCtx.textBaseline = "bottom";
 
-  // Ground shadow under animal
-  gameCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-  gameCtx.beginPath();
-  const shadowScale = Math.max(0.3, 1 - (runner.jumpY / 120));
-  gameCtx.ellipse(playerRenderX, runner.baseY + 12, (runner.width / 2) * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
-  gameCtx.fill();
+  const emojiFont = "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
 
-  // Animal Emoji Character
+  // Add subtle shadow to the animal character for depth and pop
+  gameCtx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+  gameCtx.shadowBlur = 6;
+  gameCtx.shadowOffsetY = 3;
+
   if (runner.isDucking) {
     // Ducking / Sliding posture (squished & low)
-    gameCtx.translate(playerRenderX, playerRenderY + 20);
-    gameCtx.scale(1.25, 0.6);
-    gameCtx.font = "78px sans-serif";
+    gameCtx.save();
+    gameCtx.translate(playerRenderX, playerRenderY + 16);
+    gameCtx.scale(1.22, 0.6);
+    gameCtx.font = `86px ${emojiFont}`;
     gameCtx.fillText(animal.emoji, 0, 0);
+    gameCtx.restore();
 
     // Dust particles when sliding
-    gameCtx.font = "20px sans-serif";
-    gameCtx.fillText("💨", -30, -5);
+    gameCtx.save();
+    gameCtx.shadowColor = 'transparent';
+    gameCtx.font = `24px ${emojiFont}`;
+    gameCtx.fillText("💨", playerRenderX - 35, runner.baseY);
+    gameCtx.restore();
   } else if (runner.isJumping) {
     // Jumping posture (high arc, slight joyful tilt)
+    gameCtx.save();
     gameCtx.translate(playerRenderX, playerRenderY);
     gameCtx.rotate(-0.08);
-    gameCtx.font = "82px sans-serif";
+    gameCtx.font = `88px ${emojiFont}`;
     gameCtx.fillText(animal.emoji, 0, 0);
+    gameCtx.restore();
   } else {
-    // Running forward down the track!
-    // Slight side tilt when moving between lanes
+    // Running forward firmly on the ground!
     const laneTilt = (runner.targetLane - runner.currentLane) * 0.12;
+    gameCtx.save();
     gameCtx.translate(playerRenderX, playerRenderY);
     gameCtx.rotate(laneTilt);
-    gameCtx.font = "80px sans-serif";
+    gameCtx.font = `86px ${emojiFont}`;
     gameCtx.fillText(animal.emoji, 0, 0);
+    gameCtx.restore();
   }
   gameCtx.restore();
 
