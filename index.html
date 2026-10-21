@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=3.2">
+  <link rel="stylesheet" href="style.css?v=3.3">
 </head>
 <body>
   <!-- Background Decorations -->
@@ -133,35 +133,51 @@
         </div>
       </div>
 
-      <!-- 1. Interactive Panoramic Farm Landscape -->
+      <!-- 1. Interactive 3D Diorama Farm Landscape -->
       <div class="farm-landscape-container" id="farm-view">
-        <div class="farm-landscape" id="farm-landscape">
+        <div class="farm-landscape farm-diorama-3d" id="farm-landscape">
           
-          <!-- Farm scenery elements -->
-          <div class="scenery-sky"></div>
-          <div class="scenery-hills"></div>
+          <!-- 3D Sky & Distant Atmosphere -->
+          <div class="diorama-sky">
+            <div class="sky-sun">☀️</div>
+            <div class="scenery-cloud cloud-1">☁️</div>
+            <div class="scenery-cloud cloud-2">☁️</div>
+            <div class="scenery-cloud cloud-3">⛅</div>
+            <div class="flying-birds">🕊️</div>
+          </div>
           
-          <!-- Windmill -->
-          <div class="scenery-windmill" title="آسیاب بادی مزرعه">
-            <div class="windmill-body">🛖</div>
-            <div class="windmill-blades">☸️</div>
+          <!-- 3D Distant Hills Layer -->
+          <div class="diorama-hills"></div>
+          
+          <!-- 3D Farm Ground Pathways (Dirt trail winding through farm) -->
+          <div class="farm-trail-path"></div>
+          
+          <!-- 3D Windmill with Turning Rotor -->
+          <div class="scenery-windmill-3d" title="آسیاب بادی مزرعه">
+            <div class="windmill-shadow"></div>
+            <div class="windmill-tower">🛖</div>
+            <div class="windmill-rotor">☸️</div>
           </div>
 
-          <!-- Red Barn -->
-          <div class="scenery-barn" title="انبار و اصطبل مزرعه">
-            <div class="barn-icon">🏡</div>
-            <div class="barn-sign">انبار مزرعه</div>
+          <!-- 3D Red Barn with Chimney Smoke -->
+          <div class="scenery-barn-3d" title="انبار و اصطبل بزرگ مزرعه">
+            <div class="barn-shadow"></div>
+            <div class="barn-smoke">💨</div>
+            <div class="barn-structure">🏡</div>
+            <div class="barn-title-sign">انبار مزرعه</div>
           </div>
 
-          <!-- Trees & Nature -->
-          <div class="scenery-tree tree-1">🌳</div>
-          <div class="scenery-tree tree-2">🌲</div>
-          <div class="scenery-tree tree-3">🍎</div>
-          <div class="scenery-butterfly butterfly-1">🦋</div>
-          <div class="scenery-butterfly butterfly-2">🦋</div>
+          <!-- 3D Orchard Trees & Flora -->
+          <div class="scenery-tree-3d tree-apple">🍎🌳</div>
+          <div class="scenery-tree-3d tree-pine">🌲</div>
+          <div class="scenery-tree-3d tree-oak">🌳</div>
+          <div class="scenery-sunflower">🌻🌻</div>
+          <div class="scenery-butterfly-3d b-1">🦋</div>
+          <div class="scenery-butterfly-3d b-2">🦋</div>
 
-          <!-- Animal 1: Hen (Near Chicken Coop) -->
+          <!-- Animal 1: Hen (Chicken Coop & Straw Nest) -->
           <div class="farm-habitat habitat-hen" data-animal-id="hen" id="farm-animal-hen" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
             <div class="habitat-prop coop-prop">🛖</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">قُد قُد قُدا!</div>
@@ -172,60 +188,75 @@
             <div class="nest-prop">🪹🥚</div>
           </div>
 
-          <!-- Animal 2: Cow (Lush Pasture) -->
+          <!-- Animal 2: Cow (Lush Meadow Pasture & Water Trough) -->
           <div class="farm-habitat habitat-cow" data-animal-id="cow" id="farm-animal-cow" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
+            <div class="habitat-prop cow-fence">🪵🪵</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">مااااا!</div>
               <div class="animal-sprite sprite-cow">🐄</div>
               <div class="animal-label">گاو</div>
               <div class="active-beacon"></div>
             </div>
-            <div class="grass-patch">🍀🌼🍀</div>
+            <div class="pasture-details">🍀🌼</div>
           </div>
 
-          <!-- Animal 3: Sheep (Grassy Hill) -->
+          <!-- Animal 3: Sheep (Raised Grassy Knoll) -->
           <div class="farm-habitat habitat-sheep" data-animal-id="sheep" id="farm-animal-sheep" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
+            <div class="sheep-hill-base"></div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">بَعععع!</div>
               <div class="animal-sprite sprite-sheep">🐑</div>
               <div class="animal-label">گوسفند</div>
               <div class="active-beacon"></div>
             </div>
-            <div class="flower-patch">🌸🌿</div>
+            <div class="flower-patch">🌸🌼</div>
           </div>
 
-          <!-- Animal 4 & 5: Pond Area (Duck & Goose) -->
-          <div class="farm-pond-zone">
-            <div class="pond-water">
-              <div class="water-waves">🌊</div>
-              <div class="water-lily lily-1">🪷</div>
-              <div class="water-lily lily-2">🌿</div>
-              
-              <!-- Duck inside pond -->
-              <div class="farm-habitat habitat-duck" data-animal-id="duck" id="farm-animal-duck" role="button" tabindex="0">
-                <div class="habitat-animal-wrap">
-                  <div class="speech-bubble">کواک کواک!</div>
-                  <div class="animal-sprite sprite-duck">🦆</div>
-                  <div class="animal-label">اردک</div>
-                  <div class="active-beacon"></div>
-                </div>
-              </div>
-
-              <!-- Goose by pond edge -->
-              <div class="farm-habitat habitat-goose" data-animal-id="goose" id="farm-animal-goose" role="button" tabindex="0">
-                <div class="habitat-animal-wrap">
-                  <div class="speech-bubble">غا غا غار!</div>
-                  <div class="animal-sprite sprite-goose">🪿</div>
-                  <div class="animal-label">غاز</div>
-                  <div class="active-beacon"></div>
+          <!-- Animal 4: Duck (INSIDE 3D Pond with Water Immersion & Ripples, NO feet on dry land) -->
+          <div class="farm-pond-zone-3d">
+            <div class="pond-basin-3d">
+              <div class="pond-shore-stones">🪨</div>
+              <div class="pond-water-surface">
+                <div class="pond-ripples-layer"></div>
+                <div class="pond-lily lily-1">🪷</div>
+                <div class="pond-lily lily-2">🌿</div>
+                
+                <!-- Duck Swimming nestled in water -->
+                <div class="farm-habitat habitat-duck" data-animal-id="duck" id="farm-animal-duck" role="button" tabindex="0">
+                  <div class="duck-swimming-capsule">
+                    <div class="speech-bubble">کواک کواک!</div>
+                    <div class="duck-water-ripple-ring"></div>
+                    <div class="duck-submerged-wrapper">
+                      <div class="animal-sprite sprite-duck">🦆</div>
+                      <!-- Waterline wave mask that covers feet and creates swimming effect -->
+                      <div class="duck-waterline-mask"></div>
+                    </div>
+                    <div class="animal-label">اردک</div>
+                    <div class="active-beacon"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Animal 6: Donkey (Hay Cart & Windmill) -->
+          <!-- Animal 5: Goose (Proudly perched on grassy bank by pond edge with dock & reeds) -->
+          <div class="farm-habitat habitat-goose" data-animal-id="goose" id="farm-animal-goose" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
+            <div class="goose-dock-prop">🪵🌾</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">غا غا غار!</div>
+              <div class="animal-sprite sprite-goose">🪿</div>
+              <div class="animal-label">غاز</div>
+              <div class="active-beacon"></div>
+            </div>
+          </div>
+
+          <!-- Animal 6: Donkey (Hay Wagon & Windmill Yard) -->
           <div class="farm-habitat habitat-donkey" data-animal-id="donkey" id="farm-animal-donkey" role="button" tabindex="0">
-            <div class="hay-wagon">🧺🌾</div>
+            <div class="habitat-ground-shadow"></div>
+            <div class="hay-wagon">🧺🌾🥕</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">عَررر عَررر!</div>
               <div class="animal-sprite sprite-donkey">🫏</div>
@@ -234,8 +265,9 @@
             </div>
           </div>
 
-          <!-- Animal 7: Dog (Farm Front Gate) -->
+          <!-- Animal 7: Dog (Front Ranch Gate & Doghouse) -->
           <div class="farm-habitat habitat-dog" data-animal-id="dog" id="farm-animal-dog" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
             <div class="dog-house">🐶🪵</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">هاپ هاپ!</div>
@@ -243,11 +275,12 @@
               <div class="animal-label">سگ گله</div>
               <div class="active-beacon"></div>
             </div>
-            <div class="fence-gate">🚪</div>
+            <div class="fence-gate">🚪🦴</div>
           </div>
 
-          <!-- Animal 8: Horse (Fenced Paddock) -->
+          <!-- Animal 8: Horse (Wooden Corral & Fenced Paddock) -->
           <div class="farm-habitat habitat-horse" data-animal-id="horse" id="farm-animal-horse" role="button" tabindex="0">
+            <div class="habitat-ground-shadow"></div>
             <div class="wooden-fence">🪵🪵🪵</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">شِیهه اسب!</div>
@@ -257,9 +290,10 @@
             </div>
           </div>
 
-          <!-- Animal 9: Goat (Rocky Mound) -->
+          <!-- Animal 9: Goat (3D Stepped Rock Mountain / Crag) -->
           <div class="farm-habitat habitat-goat" data-animal-id="goat" id="farm-animal-goat" role="button" tabindex="0">
-            <div class="rock-prop">🪨🪨</div>
+            <div class="habitat-ground-shadow"></div>
+            <div class="goat-rock-mound">⛰️🪨</div>
             <div class="habitat-animal-wrap">
               <div class="speech-bubble">مَعععع!</div>
               <div class="animal-sprite sprite-goat">🐐</div>
@@ -431,6 +465,6 @@
   <canvas id="confetti-canvas"></canvas>
 
   <!-- Application Logic -->
-  <script src="app.js?v=3.2"></script>
+  <script src="app.js?v=3.3"></script>
 </body>
 </html>

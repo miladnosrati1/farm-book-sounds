@@ -160,6 +160,7 @@ async function initApp() {
   }
 
   setupFarmHabitats();
+  setup3DFarmDiorama();
   renderAnimalsGrid();
   setupEventListeners();
   initSubwaySurfersGame();
@@ -167,6 +168,54 @@ async function initApp() {
   // Route URL parameter (?s=hen) from scanned QR code
   const targetId = getUrlAnimalId();
   selectAnimal(targetId, true);
+}
+
+// Interactive 3D Farm Diorama Parallax Tilt
+function setup3DFarmDiorama() {
+  const landscape = document.getElementById('farm-landscape');
+  const container = document.getElementById('farm-view');
+  if (!landscape || !container) return;
+
+  let rafId = null;
+  let targetRotateX = 15;
+  let targetRotateY = 0;
+  let currentRotateX = 15;
+  let currentRotateY = 0;
+
+  function updateTilt() {
+    currentRotateX += (targetRotateX - currentRotateX) * 0.12;
+    currentRotateY += (targetRotateY - currentRotateY) * 0.12;
+    landscape.style.transform = `rotateX(${currentRotateX.toFixed(2)}deg) rotateY(${currentRotateY.toFixed(2)}deg) scale(0.97)`;
+    
+    if (Math.abs(targetRotateX - currentRotateX) > 0.05 || Math.abs(targetRotateY - currentRotateY) > 0.05) {
+      rafId = requestAnimationFrame(updateTilt);
+    } else {
+      rafId = null;
+    }
+  }
+
+  function handleMove(clientX, clientY) {
+    const rect = container.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const normX = Math.max(-1, Math.min(1, (x / rect.width) * 2 - 1)); // -1 to +1
+    const normY = Math.max(-1, Math.min(1, (y / rect.height) * 2 - 1)); // -1 to +1
+
+    targetRotateX = 15 - (normY * 5); // tilt between 10deg and 20deg
+    targetRotateY = normX * 6; // yaw between -6deg and +6deg
+
+    if (!rafId) rafId = requestAnimationFrame(updateTilt);
+  }
+
+  container.addEventListener('mousemove', (e) => {
+    handleMove(e.clientX, e.clientY);
+  });
+
+  container.addEventListener('mouseleave', () => {
+    targetRotateX = 15;
+    targetRotateY = 0;
+    if (!rafId) rafId = requestAnimationFrame(updateTilt);
+  });
 }
 
 // Extract animal ID from query param (?s=hen or ?id=hen or #hen)
@@ -674,7 +723,7 @@ let gameAnimId = null;
 let gameScore = 0;
 let gameFoodCollected = 0;
 let gameHighScore = 0;
-let gameSpeed = 5.2;
+let gameSpeed = 2.0;
 let gameFrame = 0;
 
 // Subway Surfers 3 Lanes (0: Left, 1: Center, 2: Right)
@@ -686,8 +735,8 @@ const runner = {
   baseY: 0,
   jumpY: 0,
   vy: 0,
-  gravity: 1.1,
-  jumpStrength: -18,
+  gravity: 0.48,
+  jumpStrength: -11.0,
   isJumping: false,
   isDucking: false,
   duckTimer: 0,
@@ -821,8 +870,8 @@ function setupTouchGestures() {
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
 
-    // Tap detected (movement < 20px) -> JUMP! (as user requested: کلیک روی صفحه بپره)
-    if (absX < 20 && absY < 20 && dt < 400) {
+    // Tap detected (movement < 25px) -> JUMP! (as user requested: کلیک روی صفحه بپره)
+    if (absX < 25 && absY < 25 && dt < 480) {
       triggerPlayerJump();
       return;
     }
@@ -941,10 +990,10 @@ function triggerPlayerJump() {
 
 function triggerPlayerDuck() {
   runner.isDucking = true;
-  runner.duckTimer = 35; // duck for ~35 frames
-  // If in air, fast drop to ground
+  runner.duckTimer = 40; // duck for ~40 frames
+  // If in air, gentle quick drop to ground
   if (runner.isJumping) {
-    runner.vy = 18;
+    runner.vy = 12;
   }
   playSfxSlide();
 }
@@ -1036,8 +1085,9 @@ function resetGameEntities() {
 
   gameScore = 0;
   gameFoodCollected = 0;
-  gameSpeed = 5.2;
+  gameSpeed = 2.0;
   gameFrame = 0;
+  nextSpawnDistance = 120;
   updateHUD();
 }
 
@@ -1077,14 +1127,14 @@ function updateSubwayState() {
   gameFrame++;
   gameScore += 1;
 
-  // Gentle kid-friendly acceleration
-  if (gameFrame % 450 === 0 && gameSpeed < 9.5) {
-    gameSpeed += 0.35;
+  // Very gentle kid-friendly progression (capped at 2.9)
+  if (gameFrame % 650 === 0 && gameSpeed < 2.9) {
+    gameSpeed += 0.06;
   }
 
   // Smooth lane interpolation
   const targetX = lanePositions[runner.currentLane];
-  runner.x += (targetX - runner.x) * 0.28;
+  runner.x += (targetX - runner.x) * 0.26;
 
   // Jump physics
   if (runner.isJumping) {
@@ -1136,32 +1186,48 @@ function spawnSubwayElements() {
   nextSpawnDistance -= gameSpeed;
 
   if (nextSpawnDistance <= 0) {
-    nextSpawnDistance = 140 + Math.random() * 80;
+    nextSpawnDistance = 220 + Math.random() * 80;
 
-    // Pick 1 or 2 lanes for obstacles
-    const lane = Math.floor(Math.random() * 3);
-    const obDef = OBSTACLES_DEF[Math.floor(Math.random() * OBSTACLES_DEF.length)];
-
-    activeObstacles.push({
-      lane: lane,
-      z: 0.05, // 0 at horizon, 1.0 at foreground
-      speed: 0.014 * (gameSpeed / 5),
-      def: obDef
-    });
-
-    // Spawn Animal's Favorite Food in one of the other lanes!
-    const foodLane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
     const animal = currentAnimal || animals[0];
 
-    // Spawn 2 or 3 food items in a line
-    for (let k = 0; k < 2; k++) {
-      activeFoods.push({
-        lane: foodLane,
-        z: 0.05 - (k * 0.06),
-        speed: 0.014 * (gameSpeed / 5),
-        emoji: animal.food_emoji || '🌽',
-        collected: false
+    // For the first ~4 seconds (240 frames), spawn ONLY delicious food treats!
+    const isEarlyRun = gameFrame < 240;
+
+    if (!isEarlyRun && Math.random() < 0.7) {
+      // Pick 1 lane for obstacle (leaving 2 lanes completely safe!)
+      const lane = Math.floor(Math.random() * 3);
+      const obDef = OBSTACLES_DEF[Math.floor(Math.random() * OBSTACLES_DEF.length)];
+
+      activeObstacles.push({
+        lane: lane,
+        z: 0.05, // 0 at horizon, 1.0 at foreground
+        speed: 0.0050 * (gameSpeed / 2.0), // ~3.2 seconds approach time
+        def: obDef
       });
+
+      // Spawn Animal's Favorite Food in one of the other 2 lanes!
+      const foodLane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
+      for (let k = 0; k < 2; k++) {
+        activeFoods.push({
+          lane: foodLane,
+          z: 0.05 - (k * 0.08),
+          speed: 0.0050 * (gameSpeed / 2.0),
+          emoji: animal.food_emoji || '🌽',
+          collected: false
+        });
+      }
+    } else {
+      // Friendly Food Run! Spawn 2 or 3 food treats in a line
+      const foodLane = Math.floor(Math.random() * 3);
+      for (let k = 0; k < 3; k++) {
+        activeFoods.push({
+          lane: foodLane,
+          z: 0.05 - (k * 0.07),
+          speed: 0.0050 * (gameSpeed / 2.0),
+          emoji: animal.food_emoji || '🌽',
+          collected: false
+        });
+      }
     }
   }
 }
@@ -1171,14 +1237,14 @@ function updateObstacles() {
     const ob = activeObstacles[i];
     ob.z += ob.speed;
 
-    // Collision check when object reaches foreground (z between 0.85 and 1.02)
-    if (ob.z >= 0.84 && ob.z <= 1.02) {
+    // Generous, kid-forgiving collision window
+    if (ob.z >= 0.88 && ob.z <= 1.01) {
       if (ob.lane === runner.currentLane) {
         let isHit = false;
 
         if (ob.def.type === 'low') {
-          // Low obstacle requires JUMP
-          if (!runner.isJumping || runner.jumpY < 42) {
+          // Low obstacle requires JUMP (forgiving clearance of 16px)
+          if (!runner.isJumping || runner.jumpY < 16) {
             isHit = true;
           }
         } else if (ob.def.type === 'high') {
@@ -1210,8 +1276,8 @@ function updateFoods() {
     const food = activeFoods[j];
     food.z += food.speed;
 
-    // Collection check
-    if (!food.collected && food.z >= 0.82 && food.z <= 1.05) {
+    // Collection check with generous kid-friendly magnet window
+    if (!food.collected && food.z >= 0.80 && food.z <= 1.06) {
       if (food.lane === runner.currentLane) {
         food.collected = true;
         gameFoodCollected++;
