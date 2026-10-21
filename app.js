@@ -1280,54 +1280,274 @@ function updateSubwayState() {
   updateHUD();
 }
 
-// Spawning Logic for 3-Lane Subway Surfers
+// Spawning Logic for 3-Lane Anti-Cheat Subway Surfers
 let nextSpawnDistance = 0;
+let lastFormationIndex = -1;
 
 function spawnSubwayElements() {
   nextSpawnDistance -= gameSpeed;
 
   if (nextSpawnDistance <= 0) {
-    nextSpawnDistance = 220 + Math.random() * 80;
-
     const animal = currentAnimal || animals[0];
+    const isEarlyRun = gameFrame < 220;
 
-    // For the first ~4 seconds (240 frames), spawn ONLY delicious food treats!
-    const isEarlyRun = gameFrame < 240;
-
-    if (!isEarlyRun && Math.random() < 0.7) {
-      // Pick 1 lane for obstacle (leaving 2 lanes completely safe!)
-      const lane = Math.floor(Math.random() * 3);
-      const obDef = OBSTACLES_DEF[Math.floor(Math.random() * OBSTACLES_DEF.length)];
-
-      activeObstacles.push({
-        lane: lane,
-        z: 0.05, // 0 at horizon, 1.0 at foreground
-        speed: 0.0050 * (gameSpeed / 2.0), // ~3.2 seconds approach time
-        def: obDef
-      });
-
-      // Spawn Animal's Favorite Food in one of the other 2 lanes!
-      const foodLane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
-      for (let k = 0; k < 2; k++) {
-        activeFoods.push({
-          lane: foodLane,
-          z: 0.05 - (k * 0.08),
-          speed: 0.0050 * (gameSpeed / 2.0),
-          emoji: animal.food_emoji || '🌽',
-          collected: false
-        });
-      }
-    } else {
-      // Friendly Food Run! Spawn 2 or 3 food treats in a line
+    if (isEarlyRun) {
+      // Gentle early food run for the first ~3.5 seconds
+      nextSpawnDistance = 190 + Math.random() * 40;
       const foodLane = Math.floor(Math.random() * 3);
       for (let k = 0; k < 3; k++) {
         activeFoods.push({
           lane: foodLane,
-          z: 0.05 - (k * 0.07),
+          z: 0.04 - (k * 0.07),
           speed: 0.0050 * (gameSpeed / 2.0),
           emoji: animal.food_emoji || '🌽',
-          collected: false
+          collected: false,
+          isAirborne: false
         });
+      }
+      return;
+    }
+
+    // Reaction distance: ~3 to 4 seconds approach time for kid-friendly gameplay
+    nextSpawnDistance = 270 + Math.random() * 60;
+    const baseSpeed = 0.0050 * (gameSpeed / 2.0);
+
+    // ANTI-CHEAT FORMATIONS:
+    // Every obstacle requires deliberate action (cannot be bypassed by lazily stepping to an empty side!)
+    const FORMATION_CHOICES = [
+      'FULL_ROAD_FENCE',              // 3-lane continuous fence -> Must JUMP!
+      'FULL_ROAD_BRANCH',             // 3-lane continuous overhead branch -> Must DUCK!
+      'TREES_FLANK_CENTER_LOG',       // Giant trees block outer lanes, log in center -> Must JUMP center!
+      'GIANT_TRACTOR_LEFT',           // Giant 2-lane tractor blocks lanes 0 & 1 -> Must steer to lane 2!
+      'GIANT_TRACTOR_RIGHT',          // Giant 2-lane tractor blocks lanes 1 & 2 -> Must steer to lane 0!
+      'GIANT_TRACTOR_AND_FENCE_RIGHT',// Tractor blocks lanes 0 & 1, fence in lane 2 -> Must steer & JUMP!
+      'GIANT_TRACTOR_AND_FENCE_LEFT', // Tractor blocks lanes 1 & 2, fence in lane 0 -> Must steer & JUMP!
+      'FOOD_CELEBRATION'              // Pure celebration food trail
+    ];
+
+    let choiceIdx;
+    do {
+      choiceIdx = Math.floor(Math.random() * FORMATION_CHOICES.length);
+    } while (choiceIdx === lastFormationIndex && FORMATION_CHOICES.length > 1);
+    lastFormationIndex = choiceIdx;
+
+    const chosen = FORMATION_CHOICES[choiceIdx];
+
+    switch (chosen) {
+      case 'FULL_ROAD_FENCE': {
+        // Continuous ranch fence across ALL 3 lanes. Cheating sideways is impossible; child MUST JUMP!
+        activeObstacles.push({
+          lane: 1, // center anchor
+          isFullRoad: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: {
+            type: 'low',
+            emoji: '🪵',
+            label: 'نرده سراسری',
+            isFullRoad: true,
+            needJump: true
+          }
+        });
+
+        // Airborne food bonus floating above all 3 lanes (jumping collects them in mid-air!)
+        for (let l = 0; l < 3; l++) {
+          activeFoods.push({
+            lane: l,
+            z: 0.04,
+            speed: baseSpeed,
+            emoji: animal.food_emoji || '🌽',
+            collected: false,
+            isAirborne: true
+          });
+        }
+        break;
+      }
+
+      case 'FULL_ROAD_BRANCH': {
+        // Continuous overhead branch across ALL 3 lanes. Cheating sideways is impossible; child MUST DUCK!
+        activeObstacles.push({
+          lane: 1, // center anchor
+          isFullRoad: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: {
+            type: 'high',
+            emoji: '🍃',
+            label: 'شاخه سراسری',
+            isFullRoad: true,
+            needDuck: true
+          }
+        });
+
+        // Trailing ground food reward right after ducking
+        const trailLane = Math.floor(Math.random() * 3);
+        activeFoods.push({
+          lane: trailLane,
+          z: 0.04 - 0.10,
+          speed: baseSpeed,
+          emoji: animal.food_emoji || '🌽',
+          collected: false,
+          isAirborne: false
+        });
+        break;
+      }
+
+      case 'TREES_FLANK_CENTER_LOG': {
+        // Giant Trees block lane 0 and lane 2 completely. Center lane 1 has a low log that MUST be jumped!
+        // Dodging sideways hits the giant trees!
+        activeObstacles.push({
+          lane: 0,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🌳', label: 'درخت تنومند', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 2,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🌳', label: 'درخت تنومند', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 1,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'low', emoji: '🪵', label: 'کنده درخت', needJump: true }
+        });
+
+        // Airborne treat directly above center log
+        activeFoods.push({
+          lane: 1,
+          z: 0.04,
+          speed: baseSpeed,
+          emoji: animal.food_emoji || '🌽',
+          collected: false,
+          isAirborne: true
+        });
+        break;
+      }
+
+      case 'GIANT_TRACTOR_LEFT': {
+        // Giant Tractor blocks lanes 0 & 1 (occupies 2 full lanes). Only lane 2 is open!
+        activeObstacles.push({
+          lane: 0.5,
+          occupiedLanes: [0, 1],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true, needDodge: true }
+        });
+
+        // Safe guide food treats in lane 2
+        for (let k = 0; k < 2; k++) {
+          activeFoods.push({
+            lane: 2,
+            z: 0.04 - (k * 0.07),
+            speed: baseSpeed,
+            emoji: animal.food_emoji || '🌽',
+            collected: false,
+            isAirborne: false
+          });
+        }
+        break;
+      }
+
+      case 'GIANT_TRACTOR_RIGHT': {
+        // Giant Tractor blocks lanes 1 & 2 (occupies 2 full lanes). Only lane 0 is open!
+        activeObstacles.push({
+          lane: 1.5,
+          occupiedLanes: [1, 2],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true, needDodge: true }
+        });
+
+        // Safe guide food treats in lane 0
+        for (let k = 0; k < 2; k++) {
+          activeFoods.push({
+            lane: 0,
+            z: 0.04 - (k * 0.07),
+            speed: baseSpeed,
+            emoji: animal.food_emoji || '🌽',
+            collected: false,
+            isAirborne: false
+          });
+        }
+        break;
+      }
+
+      case 'GIANT_TRACTOR_AND_FENCE_RIGHT': {
+        // Giant Tractor blocks lanes 0 & 1, while Lane 2 has a low fence!
+        // Player must steer to lane 2 AND jump over the fence (cannot dodge left because of tractor)!
+        activeObstacles.push({
+          lane: 0.5,
+          occupiedLanes: [0, 1],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 2,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'low', emoji: '🪵', label: 'نرده چوبی', needJump: true }
+        });
+        activeFoods.push({
+          lane: 2,
+          z: 0.04,
+          speed: baseSpeed,
+          emoji: animal.food_emoji || '🌽',
+          collected: false,
+          isAirborne: true
+        });
+        break;
+      }
+
+      case 'GIANT_TRACTOR_AND_FENCE_LEFT': {
+        // Giant Tractor blocks lanes 1 & 2, while Lane 0 has a low fence!
+        // Player must steer to lane 0 AND jump over the fence!
+        activeObstacles.push({
+          lane: 1.5,
+          occupiedLanes: [1, 2],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 0,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'low', emoji: '🪵', label: 'نرده چوبی', needJump: true }
+        });
+        activeFoods.push({
+          lane: 0,
+          z: 0.04,
+          speed: baseSpeed,
+          emoji: animal.food_emoji || '🌽',
+          collected: false,
+          isAirborne: true
+        });
+        break;
+      }
+
+      case 'FOOD_CELEBRATION':
+      default: {
+        // Pure celebration food trail
+        const foodLane = Math.floor(Math.random() * 3);
+        for (let k = 0; k < 3; k++) {
+          activeFoods.push({
+            lane: foodLane,
+            z: 0.04 - (k * 0.07),
+            speed: baseSpeed,
+            emoji: animal.food_emoji || '🌽',
+            collected: false,
+            isAirborne: false
+          });
+        }
+        break;
       }
     }
   }
@@ -1340,7 +1560,20 @@ function updateObstacles() {
 
     // Generous, kid-forgiving collision window
     if (ob.z >= 0.88 && ob.z <= 1.01) {
-      if (ob.lane === runner.currentLane) {
+      let laneBlocked = false;
+
+      if (ob.isFullRoad) {
+        // Spans ALL 3 lanes (no dodging possible)
+        laneBlocked = true;
+      } else if (ob.occupiedLanes && Array.isArray(ob.occupiedLanes)) {
+        // Spans multiple lanes (e.g. [0, 1] for Giant Tractor)
+        laneBlocked = ob.occupiedLanes.includes(runner.currentLane);
+      } else {
+        // Single lane
+        laneBlocked = (ob.lane === runner.currentLane);
+      }
+
+      if (laneBlocked) {
         let isHit = false;
 
         if (ob.def.type === 'low') {
@@ -1354,7 +1587,7 @@ function updateObstacles() {
             isHit = true;
           }
         } else if (ob.def.type === 'blocker') {
-          // Blocker must be dodged (cannot jump or duck)
+          // Blocker cannot be jumped or ducked over
           isHit = true;
         }
 
@@ -1382,14 +1615,15 @@ function updateFoods() {
       if (food.lane === runner.currentLane) {
         food.collected = true;
         gameFoodCollected++;
-        gameScore += 10;
+        const points = food.isAirborne ? 15 : 10;
+        gameScore += points;
         playSfxFoodEat();
 
-        // Spawn floating indicator
+        // Spawn floating indicator (special callout for jumping mid-air catch!)
         floatingTexts.push({
           x: runner.x,
           y: runner.baseY - runner.jumpY - 20,
-          text: `+10 ${food.emoji}`,
+          text: food.isAirborne ? `+${points} پرواز! 🌟` : `+${points} ${food.emoji}`,
           alpha: 1.0
         });
 
@@ -1569,46 +1803,295 @@ function drawSubwaySurfersFrame() {
 
       // Floating bobbing effect
       const foodBob = Math.sin((gameFrame * 0.2) + food.z * 10) * 8 * p.scale;
-      gameCtx.fillText(food.emoji, p.x, p.y - 25 * p.scale + foodBob);
+      // If airborne above fence, float significantly higher so child jumps to catch!
+      const airOffset = food.isAirborne ? (52 * p.scale) : 0;
+      gameCtx.fillText(food.emoji, p.x, p.y - 25 * p.scale - airOffset + foodBob);
+
+      // Star sparkle above airborne food
+      if (food.isAirborne) {
+        gameCtx.font = `${Math.floor(20 * p.scale)}px sans-serif`;
+        gameCtx.fillText("✨", p.x + 18 * p.scale, p.y - 48 * p.scale - airOffset);
+      }
+
       gameCtx.restore();
     }
   });
 
-  // 6. Render Moving Obstacles (Sorted by z)
+  // 6. Render Moving Obstacles (Anti-Cheat & Giant Formations)
   activeObstacles.forEach(ob => {
     if (ob.z > 0 && ob.z <= 1.1) {
-      const p = projectLanePoint(ob.lane, ob.z);
-      const fontSize = Math.floor(58 * p.scale);
-      gameCtx.save();
-      gameCtx.globalAlpha = 1.0;
-      gameCtx.textAlign = "center";
-      gameCtx.textBaseline = "bottom";
+      // CASE 1: Continuous 3-Lane Ranch Fence (Cannot be bypassed; jumping is mandatory!)
+      if (ob.isFullRoad && ob.def.type === 'low') {
+        const pL = projectLanePoint(0, ob.z);
+        const pC = projectLanePoint(1, ob.z);
+        const pR = projectLanePoint(2, ob.z);
+        const sc = pC.scale;
+        const leftEdgeX = pL.x - 38 * sc;
+        const rightEdgeX = pR.x + 38 * sc;
+        const fenceY = pC.y;
 
-      if (ob.def.type === 'high') {
-        // High overhead obstacle (hanging line / branch)
-        gameCtx.fillStyle = '#000000';
-        gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
-        gameCtx.fillText(ob.def.emoji, p.x, p.y - 50 * p.scale);
+        gameCtx.save();
 
-        // Hanging warning sign
-        gameCtx.fillStyle = 'rgba(239, 68, 68, 0.85)';
-        gameCtx.fillRect(p.x - 30 * p.scale, p.y - 88 * p.scale, 60 * p.scale, 16 * p.scale);
+        // Roadwide fence ground shadow
+        gameCtx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+        gameCtx.beginPath();
+        gameCtx.ellipse(pC.x, fenceY + 3 * sc, (rightEdgeX - leftEdgeX) * 0.52, 7 * sc, 0, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        // Lower horizontal wooden rail
+        const rGrad1 = gameCtx.createLinearGradient(0, fenceY - 22 * sc, 0, fenceY - 10 * sc);
+        rGrad1.addColorStop(0, '#B45309');
+        rGrad1.addColorStop(1, '#78350F');
+        gameCtx.fillStyle = rGrad1;
+        gameCtx.fillRect(leftEdgeX, fenceY - 22 * sc, rightEdgeX - leftEdgeX, 11 * sc);
+
+        // Upper horizontal wooden rail
+        const rGrad2 = gameCtx.createLinearGradient(0, fenceY - 42 * sc, 0, fenceY - 30 * sc);
+        rGrad2.addColorStop(0, '#D97706');
+        rGrad2.addColorStop(1, '#92400E');
+        gameCtx.fillStyle = rGrad2;
+        gameCtx.fillRect(leftEdgeX, fenceY - 42 * sc, rightEdgeX - leftEdgeX, 12 * sc);
+
+        // Crossbracing (X planks)
+        gameCtx.strokeStyle = '#92400E';
+        gameCtx.lineWidth = 4 * sc;
+        gameCtx.beginPath();
+        gameCtx.moveTo(pL.x, fenceY - 40 * sc);
+        gameCtx.lineTo(pC.x, fenceY - 12 * sc);
+        gameCtx.moveTo(pC.x, fenceY - 40 * sc);
+        gameCtx.lineTo(pL.x, fenceY - 12 * sc);
+        gameCtx.moveTo(pC.x, fenceY - 40 * sc);
+        gameCtx.lineTo(pR.x, fenceY - 12 * sc);
+        gameCtx.moveTo(pR.x, fenceY - 40 * sc);
+        gameCtx.lineTo(pC.x, fenceY - 12 * sc);
+        gameCtx.stroke();
+
+        // Vertical wooden posts at Left, Center, Right, and edges
+        const postPositions = [leftEdgeX + 8 * sc, pL.x, pC.x, pR.x, rightEdgeX - 8 * sc];
+        postPositions.forEach(px => {
+          gameCtx.fillStyle = '#78350F';
+          gameCtx.fillRect(px - 7 * sc, fenceY - 48 * sc, 14 * sc, 48 * sc);
+          gameCtx.fillStyle = '#D97706';
+          gameCtx.fillRect(px - 4 * sc, fenceY - 47 * sc, 8 * sc, 46 * sc);
+          // Pointed post top
+          gameCtx.beginPath();
+          gameCtx.moveTo(px - 7 * sc, fenceY - 48 * sc);
+          gameCtx.lineTo(px, fenceY - 57 * sc);
+          gameCtx.lineTo(px + 7 * sc, fenceY - 48 * sc);
+          gameCtx.closePath();
+          gameCtx.fill();
+        });
+
+        // Glowing "بپر! 👆" badge at center
+        const badgeW = 96 * sc;
+        const badgeH = 28 * sc;
+        const badgeX = pC.x;
+        const badgeY = fenceY - 62 * sc;
+
+        gameCtx.shadowColor = '#EF4444';
+        gameCtx.shadowBlur = 10 * sc;
+        gameCtx.fillStyle = '#EF4444';
+        gameCtx.beginPath();
+        if (gameCtx.roundRect) {
+          gameCtx.roundRect(badgeX - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 14 * sc);
+        } else {
+          gameCtx.rect(badgeX - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH);
+        }
+        gameCtx.fill();
+        gameCtx.shadowBlur = 0;
+
+        gameCtx.strokeStyle = '#FFFFFF';
+        gameCtx.lineWidth = 2.5 * sc;
+        gameCtx.stroke();
+
         gameCtx.fillStyle = '#FFFFFF';
-        gameCtx.font = `bold ${Math.floor(10 * p.scale)}px Vazirmatn, sans-serif`;
-        gameCtx.fillText("بشین! 👇", p.x, p.y - 75 * p.scale);
-      } else {
-        // Low or Blocker obstacle on the ground
+        gameCtx.font = `900 ${Math.floor(14 * sc)}px Vazirmatn, sans-serif`;
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'middle';
+        gameCtx.fillText("بپر! 👆", badgeX, badgeY);
+
+        gameCtx.restore();
+      }
+      // CASE 2: Continuous 3-Lane Overhead Branch (Cannot be bypassed; ducking is mandatory!)
+      else if (ob.isFullRoad && ob.def.type === 'high') {
+        const pL = projectLanePoint(0, ob.z);
+        const pC = projectLanePoint(1, ob.z);
+        const pR = projectLanePoint(2, ob.z);
+        const sc = pC.scale;
+        const leftEdgeX = pL.x - 48 * sc;
+        const rightEdgeX = pR.x + 48 * sc;
+        const overheadY = pC.y - 60 * sc;
+
+        gameCtx.save();
+
+        // Thick organic branch spanning the whole road
+        gameCtx.strokeStyle = '#78350F';
+        gameCtx.lineWidth = 14 * sc;
+        gameCtx.beginPath();
+        gameCtx.moveTo(leftEdgeX - 25 * sc, overheadY - 12 * sc);
+        gameCtx.quadraticCurveTo(pC.x, overheadY + 10 * sc, rightEdgeX + 25 * sc, overheadY - 10 * sc);
+        gameCtx.stroke();
+
+        // Inner branch bark highlight
+        gameCtx.strokeStyle = '#92400E';
+        gameCtx.lineWidth = 8 * sc;
+        gameCtx.beginPath();
+        gameCtx.moveTo(leftEdgeX - 25 * sc, overheadY - 13 * sc);
+        gameCtx.quadraticCurveTo(pC.x, overheadY + 8 * sc, rightEdgeX + 25 * sc, overheadY - 11 * sc);
+        gameCtx.stroke();
+
+        // Hanging leafy vines and apples along the branch
+        const leafClusters = [
+          { x: leftEdgeX + 15 * sc, emoji: '🍃', dy: 14 * sc },
+          { x: pL.x, emoji: '🌿', dy: 18 * sc },
+          { x: (pL.x + pC.x) / 2, emoji: '🍎', dy: 15 * sc },
+          { x: (pC.x + pR.x) / 2, emoji: '🍎', dy: 15 * sc },
+          { x: pR.x, emoji: '🌿', dy: 18 * sc },
+          { x: rightEdgeX - 15 * sc, emoji: '🍃', dy: 14 * sc }
+        ];
+        gameCtx.font = `${Math.floor(28 * sc)}px 'Segoe UI Emoji', sans-serif`;
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'middle';
+        leafClusters.forEach(lc => {
+          gameCtx.fillText(lc.emoji, lc.x, overheadY + lc.dy);
+        });
+
+        // Glowing "بشین! 👇" badge hanging below branch at center
+        const badgeW = 96 * sc;
+        const badgeH = 28 * sc;
+        const badgeX = pC.x;
+        const badgeY = overheadY + 36 * sc;
+
+        gameCtx.shadowColor = '#2563EB';
+        gameCtx.shadowBlur = 10 * sc;
+        gameCtx.fillStyle = '#2563EB';
+        gameCtx.beginPath();
+        if (gameCtx.roundRect) {
+          gameCtx.roundRect(badgeX - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 14 * sc);
+        } else {
+          gameCtx.rect(badgeX - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH);
+        }
+        gameCtx.fill();
+        gameCtx.shadowBlur = 0;
+
+        gameCtx.strokeStyle = '#FFFFFF';
+        gameCtx.lineWidth = 2.5 * sc;
+        gameCtx.stroke();
+
+        gameCtx.fillStyle = '#FFFFFF';
+        gameCtx.font = `900 ${Math.floor(14 * sc)}px Vazirmatn, sans-serif`;
+        gameCtx.fillText("بشین! 👇", badgeX, badgeY);
+
+        gameCtx.restore();
+      }
+      // CASE 3: Giant Multi-Lane Tractor (Blocks 2 full lanes!)
+      else if (ob.isGiant && ob.def.emoji === '🚜') {
+        const p = projectLanePoint(ob.lane, ob.z);
+        const sc = p.scale;
+        const fontSize = Math.floor(96 * sc);
+
+        gameCtx.save();
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'bottom';
+
+        // Wide ground shadow covering both lanes
+        gameCtx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        gameCtx.beginPath();
+        gameCtx.ellipse(p.x, p.y + 3 * sc, 52 * sc, 12 * sc, 0, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        // Puffing animated exhaust smoke
+        const smokeBob = ((gameFrame * 2.5) % 30) * sc;
+        gameCtx.font = `${Math.floor(28 * sc)}px 'Segoe UI Emoji', sans-serif`;
+        gameCtx.fillText("💨", p.x - 28 * sc, p.y - 75 * sc - smokeBob);
+
+        // Giant Tractor Emoji
+        gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
+        gameCtx.fillStyle = '#000000';
+        gameCtx.fillText("🚜", p.x, p.y);
+
+        // Warning flashing badge above tractor
+        const badgeW = 102 * sc;
+        const badgeH = 24 * sc;
+        const badgeY = p.y - 95 * sc;
+        gameCtx.fillStyle = '#F59E0B';
+        gameCtx.shadowColor = '#F59E0B';
+        gameCtx.shadowBlur = 8 * sc;
+        gameCtx.beginPath();
+        if (gameCtx.roundRect) {
+          gameCtx.roundRect(p.x - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, 10 * sc);
+        } else {
+          gameCtx.rect(p.x - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH);
+        }
+        gameCtx.fill();
+        gameCtx.shadowBlur = 0;
+        gameCtx.strokeStyle = '#FFFFFF';
+        gameCtx.lineWidth = 2 * sc;
+        gameCtx.stroke();
+
+        gameCtx.fillStyle = '#1E293B';
+        gameCtx.font = `bold ${Math.floor(11 * sc)}px Vazirmatn, sans-serif`;
+        gameCtx.textBaseline = 'middle';
+        gameCtx.fillText("⚠️ تراکتور بزرگ", p.x, badgeY);
+
+        gameCtx.restore();
+      }
+      // CASE 4: Giant Tree (Flank obstacle or lane blocker)
+      else if (ob.isGiant && ob.def.emoji === '🌳') {
+        const p = projectLanePoint(ob.lane, ob.z);
+        const sc = p.scale;
+        const fontSize = Math.floor(92 * sc);
+
+        gameCtx.save();
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'bottom';
+
+        // Deep foliage ground shadow
+        gameCtx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+        gameCtx.beginPath();
+        gameCtx.ellipse(p.x, p.y + 2 * sc, 42 * sc, 10 * sc, 0, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        // Giant Tree Emoji
+        gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
+        gameCtx.fillStyle = '#000000';
+        gameCtx.fillText("🌳", p.x, p.y);
+
+        gameCtx.restore();
+      }
+      // CASE 5: Single Log, Hay Bale, or Low Barrier (with jump indicator)
+      else {
+        const p = projectLanePoint(ob.lane, ob.z);
+        const sc = p.scale;
+        const fontSize = Math.floor(62 * sc);
+
+        gameCtx.save();
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'bottom';
+
         // Ground shadow under obstacle
         gameCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         gameCtx.beginPath();
-        gameCtx.ellipse(p.x, p.y + 2 * p.scale, (fontSize * 0.42), 6 * p.scale, 0, 0, Math.PI * 2);
+        gameCtx.ellipse(p.x, p.y + 2 * sc, (fontSize * 0.42), 6 * sc, 0, 0, Math.PI * 2);
         gameCtx.fill();
 
         gameCtx.fillStyle = '#000000';
         gameCtx.font = `${fontSize}px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif`;
         gameCtx.fillText(ob.def.emoji, p.x, p.y);
+
+        if (ob.def.needJump) {
+          gameCtx.fillStyle = 'rgba(239, 68, 68, 0.88)';
+          const hw = 52 * sc;
+          const hh = 16 * sc;
+          gameCtx.fillRect(p.x - hw / 2, p.y - 70 * sc, hw, hh);
+          gameCtx.fillStyle = '#FFFFFF';
+          gameCtx.font = `bold ${Math.floor(10 * sc)}px Vazirmatn, sans-serif`;
+          gameCtx.textBaseline = 'middle';
+          gameCtx.fillText("بپر! 👆", p.x, p.y - 62 * sc);
+        }
+
+        gameCtx.restore();
       }
-      gameCtx.restore();
     }
   });
 
