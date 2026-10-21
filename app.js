@@ -1,10 +1,10 @@
 /**
- * Farm Book Sounds & Farm Runner Mini-Game
+ * Farm Book Sounds & Subway Surfers Style Fullscreen Farm Runner
  * Author: miladnosrati1
  * Repo: farm-book-sounds
  */
 
-// Comprehensive animal data with Persian sounds, habitats & kid-friendly actions
+// Comprehensive animal data with Persian sounds, habitats & favorite foods
 const FALLBACK_ANIMALS = [
   {
     id: "hen",
@@ -13,7 +13,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/hen.mp3",
     sound_text: "قُد قُد قُدا!",
     habitat: "مرغ‌دانی و لانه کاه",
-    action_hint: "در حال دانه خوردن 🌾"
+    action_hint: "در حال دانه خوردن 🌾",
+    food_emoji: "🌽",
+    food_name: "ذرت شیرین"
   },
   {
     id: "cow",
@@ -22,7 +24,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/cow.mp3",
     sound_text: "ماااااا!",
     habitat: "چمن‌زار سرسبز",
-    action_hint: "در حال چریدن علف 🍀"
+    action_hint: "در حال چریدن علف 🍀",
+    food_emoji: "🍀",
+    food_name: "شبدر تازه"
   },
   {
     id: "sheep",
@@ -31,7 +35,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/sheep.mp3",
     sound_text: "بَععععع!",
     habitat: "تپه علفی نرم",
-    action_hint: "در حال دویدن در دشت 🌼"
+    action_hint: "در حال دویدن در دشت 🌼",
+    food_emoji: "🌿",
+    food_name: "علف سبز"
   },
   {
     id: "goose",
@@ -40,7 +46,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/goose.mp3",
     sound_text: "غا غا غار!",
     habitat: "کنار برکه آب",
-    action_hint: "در حال بال زدن 💧"
+    action_hint: "در حال بال زدن 💧",
+    food_emoji: "🌾",
+    food_name: "گندم طلایی"
   },
   {
     id: "duck",
@@ -49,7 +57,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/duck.mp3",
     sound_text: "کواک کواک!",
     habitat: "داخل برکه نیلوفر",
-    action_hint: "در حال شنا روی آب 🪷"
+    action_hint: "در حال شنا روی آب 🪷",
+    food_emoji: "🍞",
+    food_name: "نان و سبزه"
   },
   {
     id: "donkey",
@@ -58,7 +68,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/donkey.mp3",
     sound_text: "عَررر عَررر!",
     habitat: "کنار آسیاب و گاری کاه",
-    action_hint: "در حال خوردن یونجه 🧺"
+    action_hint: "در حال خوردن یونجه 🧺",
+    food_emoji: "🥕",
+    food_name: "هویج تازه"
   },
   {
     id: "dog",
@@ -67,7 +79,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/dog.mp3",
     sound_text: "هاپ هاپ!",
     habitat: "درگاه چوبی مزرعه",
-    action_hint: "در حال نگهبانی مزرعه 🪵"
+    action_hint: "در حال نگهبانی مزرعه 🪵",
+    food_emoji: "🦴",
+    food_name: "استخوان لذیذ"
   },
   {
     id: "horse",
@@ -76,7 +90,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/horse.mp3",
     sound_text: "هیهااااء!",
     habitat: "محوطه اصطبل و نرده‌ها",
-    action_hint: "در حال تاختن شاد 🏇"
+    action_hint: "در حال تاختن شاد 🏇",
+    food_emoji: "🍎",
+    food_name: "سیب سرخ"
   },
   {
     id: "goat",
@@ -85,7 +101,9 @@ const FALLBACK_ANIMALS = [
     audio: "audio/goat.mp3",
     sound_text: "مَععععع!",
     habitat: "صخره سنگی کوچک",
-    action_hint: "در حال پریدن روی سنگ‌ها 🪨"
+    action_hint: "در حال پریدن روی سنگ‌ها 🪨",
+    food_emoji: "🥦",
+    food_name: "کلم بروکلی"
   }
 ];
 
@@ -102,6 +120,7 @@ const activeSoundText = document.getElementById('active-sound-text');
 const activeTag = document.getElementById('active-tag');
 const activeHabitatTag = document.getElementById('active-habitat-tag');
 const calloutText = document.getElementById('callout-text');
+const calloutFoodBadge = document.getElementById('callout-food-badge');
 const btnStartGame = document.getElementById('btn-start-game');
 
 const btnPlayPause = document.getElementById('btn-play-pause');
@@ -143,7 +162,7 @@ async function initApp() {
   setupFarmHabitats();
   renderAnimalsGrid();
   setupEventListeners();
-  initFarmRunnerGame();
+  initSubwaySurfersGame();
 
   // Route URL parameter (?s=hen) from scanned QR code
   const targetId = getUrlAnimalId();
@@ -237,6 +256,9 @@ function selectAnimal(animalId, isInitialLoad = false) {
   if (calloutText) {
     calloutText.textContent = `روی عکسم بزن تا با ${found.name} بازی کنی!`;
   }
+  if (calloutFoodBadge) {
+    calloutFoodBadge.textContent = `جمع‌آوری ${found.food_name || 'غذا'} ${found.food_emoji || '🌾'}`;
+  }
   document.title = `صدای ${found.name} ${found.emoji} | کتاب کودک`;
 
   // 2. Update Direct Audio Download Link
@@ -248,7 +270,7 @@ function selectAnimal(animalId, isInitialLoad = false) {
   const targetHabitat = document.getElementById(`farm-animal-${found.id}`);
   if (targetHabitat) {
     targetHabitat.classList.add('is-active-habitat');
-    // Gently scroll farm container to bring animal into center view on mobile
+    // Scroll farm container smoothly to bring animal into center view on mobile
     if (farmView) {
       const habitatLeft = targetHabitat.offsetLeft;
       const containerWidth = farmView.clientWidth;
@@ -415,16 +437,16 @@ function setupEventListeners() {
     farmView.classList.add('hidden');
   });
 
-  // Launch Game on Avatar Click or Callout Button Click!
-  avatarContainer.addEventListener('click', openFarmRunnerGame);
+  // Launch Subway Surfers Game on Avatar Click or Callout Button Click!
+  avatarContainer.addEventListener('click', openSubwaySurfersGame);
   avatarContainer.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      openFarmRunnerGame();
+      openSubwaySurfersGame();
     }
   });
 
-  btnStartGame.addEventListener('click', openFarmRunnerGame);
+  btnStartGame.addEventListener('click', openSubwaySurfersGame);
 
   // Handle browser back/forward buttons
   window.addEventListener('popstate', (e) => {
@@ -459,7 +481,7 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Kid-Friendly Sound Effects
+// Sound effects: Jump, Lane Switch, Food Eat, Duck/Slide, Bump, Fanfare
 function playSfxJump() {
   if (isGameAudioMuted) return;
   const ctx = getAudioContext();
@@ -471,41 +493,89 @@ function playSfxJump() {
 
     osc.type = 'sine';
     osc.frequency.setValueAtTime(260, now);
-    osc.frequency.exponentialRampToValueAtTime(580, now + 0.16);
+    osc.frequency.exponentialRampToValueAtTime(620, now + 0.18);
 
     gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.16);
+    osc.stop(now + 0.18);
   } catch (e) {}
 }
 
-function playSfxStar() {
+function playSfxSlide() {
+  if (isGameAudioMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.15);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch (e) {}
+}
+
+function playSfxLaneSwitch() {
+  if (isGameAudioMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.08);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch (e) {}
+}
+
+function playSfxFoodEat() {
   if (isGameAudioMuted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
   try {
     const now = ctx.currentTime;
-    [659, 880, 1046].forEach((freq, idx) => {
+    [523, 659, 784, 1046].forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const delay = idx * 0.05;
+      const delay = idx * 0.035;
 
-      osc.type = 'triangle';
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now + delay);
 
-      gain.gain.setValueAtTime(0.2, now + delay);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.14);
+      gain.gain.setValueAtTime(0.22, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.12);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now + delay);
-      osc.stop(now + delay + 0.14);
+      osc.stop(now + delay + 0.12);
     });
   } catch (e) {}
 }
@@ -520,17 +590,17 @@ function playSfxBump() {
     const now = ctx.currentTime;
 
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(240, now);
-    osc.frequency.exponentialRampToValueAtTime(90, now + 0.22);
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
 
     gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.22);
+    osc.stop(now + 0.25);
   } catch (e) {}
 }
 
@@ -544,12 +614,12 @@ function playSfxFanfare() {
     notes.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const delay = idx * 0.1;
+      const delay = idx * 0.09;
 
-      osc.type = 'sine';
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, now + delay);
 
-      gain.gain.setValueAtTime(0.22, now + delay);
+      gain.gain.setValueAtTime(0.2, now + delay);
       gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.25);
 
       osc.connect(gain);
@@ -562,101 +632,120 @@ function playSfxFanfare() {
 }
 
 // ==========================================================================
-// FARM RUNNER MINI-GAME ENGINE (Google Dino Style)
+// FULLSCREEN 3-LANE SUBWAY SURFERS STYLE FARM RUNNER
 // ==========================================================================
 const gameModal = document.getElementById('game-modal');
 const gameCanvas = document.getElementById('game-canvas');
-const gamePlayerEmoji = document.getElementById('game-player-emoji');
-const gamePlayerName = document.getElementById('game-player-name');
-const gameScoreEl = document.getElementById('game-score');
-const gameHighScoreEl = document.getElementById('game-high-score');
+const btnPauseGame = document.getElementById('btn-pause-game');
+const hudCharAvatar = document.getElementById('hud-char-avatar');
+const hudFoodIcon = document.getElementById('hud-food-icon');
+const hudFoodCount = document.getElementById('hud-food-count');
+const hudScoreValue = document.getElementById('hud-score-value');
+const hudHighValue = document.getElementById('hud-high-value');
 const btnGameSound = document.getElementById('btn-game-sound');
-const btnCloseGame = document.getElementById('btn-close-game');
-const btnTouchJump = document.getElementById('btn-touch-jump');
 
 const gameStartScreen = document.getElementById('game-start-screen');
+const gamePauseScreen = document.getElementById('game-pause-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
+
 const startScreenEmoji = document.getElementById('start-screen-emoji');
+const startScreenTitle = document.getElementById('start-screen-title');
+const startAnimalName = document.getElementById('start-animal-name');
+const startFoodName = document.getElementById('start-food-name');
+const btnPlayGame = document.getElementById('btn-play-game');
+
+const pauseFoodCount = document.getElementById('pause-food-count');
+const pauseScoreValue = document.getElementById('pause-score-value');
+const btnResumeGame = document.getElementById('btn-resume-game');
+const btnRestartFromPause = document.getElementById('btn-restart-from-pause');
+const btnExitToMain = document.getElementById('btn-exit-to-main');
+
+const overFoodEmoji = document.getElementById('over-food-emoji');
+const overFoodSummary = document.getElementById('over-food-summary');
 const finalScoreEl = document.getElementById('final-score');
 const gameEncouragement = document.getElementById('game-encouragement');
-const btnPlayGame = document.getElementById('btn-play-game');
 const btnRestartGame = document.getElementById('btn-restart-game');
 const btnExitToFarm = document.getElementById('btn-exit-to-farm');
 
 let gameCtx = null;
 let gameRunning = false;
+let gamePaused = false;
 let gameAnimId = null;
 let gameScore = 0;
+let gameFoodCollected = 0;
 let gameHighScore = 0;
-let gameSpeed = 4.8;
+let gameSpeed = 5.2;
 let gameFrame = 0;
 
-// Player Physics
-const player = {
-  x: 90,
+// Subway Surfers 3 Lanes (0: Left, 1: Center, 2: Right)
+const runner = {
+  currentLane: 1,
+  targetLane: 1,
+  x: 0,
   y: 0,
-  w: 48,
-  h: 52,
+  baseY: 0,
+  jumpY: 0,
   vy: 0,
-  gravity: 0.72,
-  jumpStrength: -13.8,
-  isGrounded: true,
-  runBob: 0
+  gravity: 1.1,
+  jumpStrength: -18,
+  isJumping: false,
+  isDucking: false,
+  duckTimer: 0,
+  runBob: 0,
+  width: 74,
+  height: 80
 };
 
-// Ground, Obstacles & Stars
-const groundY = 250;
-let obstacles = [];
-let stars = [];
-let sceneryClouds = [];
-let sceneryFences = [];
+// Lane coordinates calculated dynamically on resize
+let horizonY = 0;
+let trackBottomY = 0;
+let lanePositions = [0, 0, 0];
 
-// Available Farm Obstacles (Fences, Hay, Bushes, Rocks)
-const OBSTACLE_TYPES = [
-  { symbol: "🪵", name: "نرده", w: 38, h: 44, offsetY: 0 },
-  { symbol: "🌾", name: "کاه", w: 42, h: 42, offsetY: 0 },
-  { symbol: "🌿", name: "بوته", w: 36, h: 36, offsetY: 0 },
-  { symbol: "🪨", name: "سنگ", w: 34, h: 32, offsetY: 0 }
+// Game Objects (Obstacles & Food Collectibles)
+let activeObstacles = [];
+let activeFoods = [];
+let floatingTexts = [];
+
+// Rich Farm Obstacles Collection:
+// Low (Jump over): Fences, Hay, Rocks, Puddles
+// High (Duck/Slide under): Clothesline, Low Branch, Barn Sign
+// Tall (Lane Blocker): Tractor, Hay Wagon
+const OBSTACLES_DEF = [
+  { type: 'low', emoji: '🪵', label: 'نرده چوبی', w: 70, h: 60, needJump: true },
+  { type: 'low', emoji: '🌾', label: 'بسته کاه', w: 72, h: 62, needJump: true },
+  { type: 'low', emoji: '🪨', label: 'سنگ مزرعه', w: 60, h: 54, needJump: true },
+  { type: 'low', emoji: '💧', label: 'چاله گل', w: 64, h: 40, needJump: true },
+  { type: 'high', emoji: '👕', label: 'طناب لباس', w: 84, h: 70, needDuck: true },
+  { type: 'high', emoji: '🍃', label: 'شاخه درخت', w: 80, h: 68, needDuck: true },
+  { type: 'blocker', emoji: '🚜', label: 'تراکتور', w: 78, h: 76, needDodge: true }
 ];
 
-function initFarmRunnerGame() {
+function initSubwaySurfersGame() {
   gameCtx = gameCanvas.getContext('2d');
-  
+  resizeGameCanvas();
+  window.addEventListener('resize', resizeGameCanvas);
+
   // Load saved high score from localStorage
   try {
-    const saved = localStorage.getItem('farm_runner_high_score');
+    const saved = localStorage.getItem('farm_subway_high_score');
     if (saved) gameHighScore = parseInt(saved, 10) || 0;
   } catch (e) {}
-  updateScoreDisplay();
+  updateHUD();
 
   // Control Listeners
   btnPlayGame.addEventListener('click', startActiveRun);
+  btnResumeGame.addEventListener('click', resumeGame);
+  btnRestartFromPause.addEventListener('click', startActiveRun);
+  btnExitToMain.addEventListener('click', closeSubwaySurfersGame);
   btnRestartGame.addEventListener('click', startActiveRun);
-  btnExitToFarm.addEventListener('click', closeFarmRunnerGame);
-  btnCloseGame.addEventListener('click', closeFarmRunnerGame);
+  btnExitToFarm.addEventListener('click', closeSubwaySurfersGame);
+  btnPauseGame.addEventListener('click', pauseGame);
 
-  // Jump trigger bindings
-  btnTouchJump.addEventListener('touchstart', (e) => { e.preventDefault(); doPlayerJump(); });
-  btnTouchJump.addEventListener('mousedown', (e) => { e.preventDefault(); doPlayerJump(); });
-  gameCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); doPlayerJump(); });
-  gameCanvas.addEventListener('mousedown', (e) => { e.preventDefault(); doPlayerJump(); });
+  // Touch Swipe & Tap Controls
+  setupTouchGestures();
 
-  window.addEventListener('keydown', (e) => {
-    if (!gameModal.classList.contains('hidden')) {
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.key === ' ') {
-        e.preventDefault();
-        if (!gameRunning && !gameStartScreen.classList.contains('hidden')) {
-          startActiveRun();
-        } else if (!gameRunning && !gameOverScreen.classList.contains('hidden')) {
-          startActiveRun();
-        } else {
-          doPlayerJump();
-        }
-      } else if (e.code === 'Escape') {
-        closeFarmRunnerGame();
-      }
-    }
-  });
+  // Keyboard Controls
+  setupKeyboardControls();
 
   // Sound Toggle inside game
   btnGameSound.addEventListener('click', () => {
@@ -665,202 +754,444 @@ function initFarmRunnerGame() {
   });
 }
 
-function openFarmRunnerGame() {
-  getAudioContext();
-  gameModal.classList.remove('hidden');
+function resizeGameCanvas() {
+  gameCanvas.width = window.innerWidth;
+  gameCanvas.height = window.innerHeight;
 
-  // Set active animal mascot in game
-  const animal = currentAnimal || animals[0];
-  gamePlayerEmoji.textContent = animal.emoji;
-  gamePlayerName.textContent = `بازی با ${animal.name}`;
-  startScreenEmoji.textContent = animal.emoji;
+  horizonY = gameCanvas.height * 0.28;
+  trackBottomY = gameCanvas.height * 0.88;
 
-  // Show Start Screen
-  gameStartScreen.classList.remove('hidden');
-  gameOverScreen.classList.add('hidden');
-  gameRunning = false;
+  const trackWidth = Math.min(gameCanvas.width * 0.85, 520);
+  const laneStep = trackWidth / 3;
+  const centerX = gameCanvas.width / 2;
 
-  resetGameEntities();
-  drawGameFrame();
+  // 3 Lanes (0: Left, 1: Center, 2: Right)
+  lanePositions = [
+    centerX - laneStep,
+    centerX,
+    centerX + laneStep
+  ];
+
+  runner.baseY = trackBottomY - runner.height;
+  runner.x = lanePositions[runner.currentLane];
 }
 
-function closeFarmRunnerGame() {
+// Touch Gestures: Swipes (Left/Right/Up/Down) & Screen Click to Jump
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+function setupTouchGestures() {
+  gameCanvas.addEventListener('touchstart', (e) => {
+    if (!gameRunning || gamePaused) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchStartTime = Date.now();
+  }, { passive: false });
+
+  gameCanvas.addEventListener('touchmove', (e) => {
+    if (gameRunning && !gamePaused) {
+      e.preventDefault(); // prevent browser pull-to-refresh
+    }
+  }, { passive: false });
+
+  gameCanvas.addEventListener('touchend', (e) => {
+    if (!gameRunning || gamePaused) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    // Tap detected (movement < 20px) -> JUMP! (as user requested: کلیک روی صفحه بپره)
+    if (absX < 20 && absY < 20 && dt < 400) {
+      triggerPlayerJump();
+      return;
+    }
+
+    // Horizontal Swipe (Lane Change)
+    if (absX > absY && absX > 30) {
+      if (dx < 0) {
+        // Swipe Left
+        moveLane(-1);
+      } else {
+        // Swipe Right
+        moveLane(1);
+      }
+      return;
+    }
+
+    // Vertical Swipe (Jump Up or Duck Down)
+    if (absY > absX && absY > 30) {
+      if (dy < 0) {
+        // Swipe Up -> Jump
+        triggerPlayerJump();
+      } else {
+        // Swipe Down -> Duck / Slide
+        triggerPlayerDuck();
+      }
+    }
+  }, { passive: false });
+
+  // Mouse fallback for desktop testing
+  let isMouseDown = false;
+  gameCanvas.addEventListener('mousedown', (e) => {
+    if (!gameRunning || gamePaused) return;
+    touchStartX = e.clientX;
+    touchStartY = e.clientY;
+    touchStartTime = Date.now();
+    isMouseDown = true;
+  });
+
+  gameCanvas.addEventListener('mouseup', (e) => {
+    if (!isMouseDown || !gameRunning || gamePaused) return;
+    isMouseDown = false;
+    const dx = e.clientX - touchStartX;
+    const dy = e.clientY - touchStartY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (absX < 15 && absY < 15) {
+      triggerPlayerJump();
+      return;
+    }
+
+    if (absX > absY && absX > 30) {
+      if (dx < 0) moveLane(-1);
+      else moveLane(1);
+    } else if (absY > absX && absY > 30) {
+      if (dy < 0) triggerPlayerJump();
+      else triggerPlayerDuck();
+    }
+  });
+}
+
+function setupKeyboardControls() {
+  window.addEventListener('keydown', (e) => {
+    if (gameModal.classList.contains('hidden')) return;
+
+    if (e.code === 'KeyP' || e.code === 'Escape') {
+      e.preventDefault();
+      if (gameRunning && !gamePaused) pauseGame();
+      else if (gamePaused) resumeGame();
+      return;
+    }
+
+    if (!gameRunning && !gameStartScreen.classList.contains('hidden')) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        startActiveRun();
+      }
+      return;
+    }
+
+    if (gameRunning && !gamePaused) {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        e.preventDefault();
+        moveLane(-1);
+      } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        e.preventDefault();
+        moveLane(1);
+      } else if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+        e.preventDefault();
+        triggerPlayerJump();
+      } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        e.preventDefault();
+        triggerPlayerDuck();
+      }
+    }
+  });
+}
+
+function moveLane(dir) {
+  const newLane = runner.currentLane + dir;
+  if (newLane >= 0 && newLane <= 2) {
+    runner.currentLane = newLane;
+    runner.targetLane = newLane;
+    playSfxLaneSwitch();
+  }
+}
+
+function triggerPlayerJump() {
+  if (!runner.isJumping) {
+    runner.isJumping = true;
+    runner.vy = runner.jumpStrength;
+    runner.isDucking = false;
+    playSfxJump();
+  }
+}
+
+function triggerPlayerDuck() {
+  runner.isDucking = true;
+  runner.duckTimer = 35; // duck for ~35 frames
+  // If in air, fast drop to ground
+  if (runner.isJumping) {
+    runner.vy = 18;
+  }
+  playSfxSlide();
+}
+
+// Open / Close Fullscreen Modal
+function openSubwaySurfersGame() {
+  getAudioContext();
+  gameModal.classList.remove('hidden');
+  resizeGameCanvas();
+
+  const animal = currentAnimal || animals[0];
+  hudCharAvatar.textContent = animal.emoji;
+  hudFoodIcon.textContent = animal.food_emoji || '🌽';
+  startScreenEmoji.textContent = animal.emoji;
+  startScreenTitle.textContent = `بازی دونده با ${animal.name}`;
+  startAnimalName.textContent = animal.name;
+  startFoodName.textContent = animal.food_name || 'غذاهای خوشمزه';
+
+  gameStartScreen.classList.remove('hidden');
+  gamePauseScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
   gameRunning = false;
+  gamePaused = false;
+
+  resetGameEntities();
+  drawSubwaySurfersFrame();
+}
+
+function closeSubwaySurfersGame() {
+  gameRunning = false;
+  gamePaused = false;
   if (gameAnimId) cancelAnimationFrame(gameAnimId);
   gameModal.classList.add('hidden');
 }
 
+function pauseGame() {
+  if (!gameRunning || gamePaused) return;
+  gamePaused = true;
+  pauseFoodCount.textContent = gameFoodCollected.toString();
+  pauseScoreValue.textContent = gameScore.toString();
+  gamePauseScreen.classList.remove('hidden');
+}
+
+function resumeGame() {
+  if (!gamePaused) return;
+  gamePaused = false;
+  gamePauseScreen.classList.add('hidden');
+  lastFrameTime = performance.now();
+  requestAnimationFrame(subwayGameLoop);
+}
+
 function resetGameEntities() {
-  player.y = groundY - player.h;
-  player.vy = 0;
-  player.isGrounded = true;
-  player.runBob = 0;
+  runner.currentLane = 1;
+  runner.targetLane = 1;
+  runner.x = lanePositions[1];
+  runner.jumpY = 0;
+  runner.vy = 0;
+  runner.isJumping = false;
+  runner.isDucking = false;
+  runner.duckTimer = 0;
+  runner.runBob = 0;
 
-  obstacles = [];
-  stars = [];
+  activeObstacles = [];
+  activeFoods = [];
+  floatingTexts = [];
+
   gameScore = 0;
-  gameSpeed = 4.8;
+  gameFoodCollected = 0;
+  gameSpeed = 5.2;
   gameFrame = 0;
-  updateScoreDisplay();
-
-  // Initial decorative background clouds & fences
-  sceneryClouds = [
-    { x: 100, y: 35, speed: 0.6, icon: "☁️" },
-    { x: 380, y: 55, speed: 0.4, icon: "☁️" },
-    { x: 650, y: 30, speed: 0.8, icon: "☁️" }
-  ];
-
-  sceneryFences = [];
-  for (let i = 0; i < 12; i++) {
-    sceneryFences.push({ x: i * 80 });
-  }
+  updateHUD();
 }
 
 function startActiveRun() {
   resetGameEntities();
   gameStartScreen.classList.add('hidden');
+  gamePauseScreen.classList.add('hidden');
   gameOverScreen.classList.add('hidden');
   gameRunning = true;
+  gamePaused = false;
   getAudioContext();
   playSfxJump();
 
-  lastTimestamp = performance.now();
+  lastFrameTime = performance.now();
   if (gameAnimId) cancelAnimationFrame(gameAnimId);
-  gameAnimId = requestAnimationFrame(gameLoop);
+  gameAnimId = requestAnimationFrame(subwayGameLoop);
 }
 
-function doPlayerJump() {
-  if (!gameRunning) return;
-  if (player.isGrounded) {
-    player.vy = player.jumpStrength;
-    player.isGrounded = false;
-    playSfxJump();
-  }
+let lastFrameTime = 0;
+function subwayGameLoop(timestamp) {
+  if (!gameRunning || gamePaused) return;
+
+  updateSubwayState();
+  drawSubwaySurfersFrame();
+
+  gameAnimId = requestAnimationFrame(subwayGameLoop);
 }
 
-let lastTimestamp = 0;
-function gameLoop(timestamp) {
-  if (!gameRunning) return;
-
-  updateGameState();
-  drawGameFrame();
-
-  gameAnimId = requestAnimationFrame(gameLoop);
-}
-
-function updateGameState() {
+function updateSubwayState() {
   gameFrame++;
+  gameScore += 1;
 
-  // Gradually and gently increase speed (kid-friendly progression)
-  if (gameFrame % 400 === 0 && gameSpeed < 8.2) {
+  // Gentle kid-friendly acceleration
+  if (gameFrame % 450 === 0 && gameSpeed < 9.5) {
     gameSpeed += 0.35;
   }
 
-  // Player physics
-  player.y += player.vy;
-  player.vy += player.gravity;
+  // Smooth lane interpolation
+  const targetX = lanePositions[runner.currentLane];
+  runner.x += (targetX - runner.x) * 0.28;
 
-  if (player.y >= groundY - player.h) {
-    player.y = groundY - player.h;
-    player.vy = 0;
-    player.isGrounded = true;
+  // Jump physics
+  if (runner.isJumping) {
+    runner.jumpY -= runner.vy;
+    runner.vy += runner.gravity;
+
+    if (runner.jumpY <= 0) {
+      runner.jumpY = 0;
+      runner.vy = 0;
+      runner.isJumping = false;
+    }
   }
 
-  // Run cycle wobble for cute kid animation
-  player.runBob = player.isGrounded ? Math.sin(gameFrame * 0.35) * 4 : 0;
+  // Duck timer
+  if (runner.isDucking) {
+    runner.duckTimer--;
+    if (runner.duckTimer <= 0) {
+      runner.isDucking = false;
+    }
+  }
 
-  // Background Cloud drift
-  sceneryClouds.forEach(cloud => {
-    cloud.x -= cloud.speed;
-    if (cloud.x < -60) cloud.x = gameCanvas.width + 40;
-  });
+  // Running trot bob
+  runner.runBob = (!runner.isJumping && !runner.isDucking) ? Math.sin(gameFrame * 0.42) * 6 : 0;
 
-  // Background Fence drift
-  sceneryFences.forEach(fence => {
-    fence.x -= gameSpeed * 0.7;
-    if (fence.x < -60) fence.x = gameCanvas.width + 20;
-  });
+  // Spawning Obstacles & Animal's Favorite Food
+  spawnSubwayElements();
 
-  // Obstacle Spawning (generous, child-friendly intervals)
-  const minObstacleDist = 240 + Math.random() * 160;
-  const lastObstacle = obstacles[obstacles.length - 1];
-  if (!lastObstacle || (gameCanvas.width - lastObstacle.x) > minObstacleDist) {
-    if (Math.random() < 0.6) {
-      const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
-      obstacles.push({
-        x: gameCanvas.width + 20,
-        y: groundY - type.h + type.offsetY,
-        w: type.w,
-        h: type.h,
-        symbol: type.symbol,
-        name: type.name
+  // Update Moving Obstacles & Check Collisions
+  updateObstacles();
+
+  // Update Food Collectibles
+  updateFoods();
+
+  // Update floating score texts
+  for (let f = floatingTexts.length - 1; f >= 0; f--) {
+    const ft = floatingTexts[f];
+    ft.y -= 1.5;
+    ft.alpha -= 0.02;
+    if (ft.alpha <= 0) floatingTexts.splice(f, 1);
+  }
+
+  updateHUD();
+}
+
+// Spawning Logic for 3-Lane Subway Surfers
+let nextSpawnDistance = 0;
+
+function spawnSubwayElements() {
+  nextSpawnDistance -= gameSpeed;
+
+  if (nextSpawnDistance <= 0) {
+    nextSpawnDistance = 140 + Math.random() * 80;
+
+    // Pick 1 or 2 lanes for obstacles
+    const lane = Math.floor(Math.random() * 3);
+    const obDef = OBSTACLES_DEF[Math.floor(Math.random() * OBSTACLES_DEF.length)];
+
+    activeObstacles.push({
+      lane: lane,
+      z: 0.05, // 0 at horizon, 1.0 at foreground
+      speed: 0.014 * (gameSpeed / 5),
+      def: obDef
+    });
+
+    // Spawn Animal's Favorite Food in one of the other lanes!
+    const foodLane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
+    const animal = currentAnimal || animals[0];
+
+    // Spawn 2 or 3 food items in a line
+    for (let k = 0; k < 2; k++) {
+      activeFoods.push({
+        lane: foodLane,
+        z: 0.05 - (k * 0.06),
+        speed: 0.014 * (gameSpeed / 5),
+        emoji: animal.food_emoji || '🌽',
+        collected: false
       });
-
-      // 40% chance to spawn a bonus star above/near the obstacle
-      if (Math.random() < 0.45) {
-        stars.push({
-          x: gameCanvas.width + 45,
-          y: groundY - type.h - 45 - (Math.random() * 30),
-          w: 24,
-          h: 24,
-          collected: false
-        });
-      }
-    }
-  }
-
-  // Update Obstacles & Collision Check
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    const ob = obstacles[i];
-    ob.x -= gameSpeed;
-
-    // Check collision with generous forgiving hitbox
-    const pad = 8;
-    if (
-      player.x + pad < ob.x + ob.w - pad &&
-      player.x + player.w - pad > ob.x + pad &&
-      player.y + pad < ob.y + ob.h - pad &&
-      player.y + player.h > ob.y + pad
-    ) {
-      handleGameOver();
-      return;
-    }
-
-    // Remove off-screen obstacles & increment score
-    if (ob.x < -60) {
-      obstacles.splice(i, 1);
-      gameScore += 1;
-      updateScoreDisplay();
-    }
-  }
-
-  // Update Collectible Stars
-  for (let j = stars.length - 1; j >= 0; j--) {
-    const star = stars[j];
-    star.x -= gameSpeed;
-
-    // Check Star Collection
-    if (
-      !star.collected &&
-      player.x < star.x + star.w &&
-      player.x + player.w > star.x &&
-      player.y < star.y + star.h &&
-      player.y + player.h > star.y
-    ) {
-      star.collected = true;
-      gameScore += 5;
-      updateScoreDisplay();
-      playSfxStar();
-      triggerMiniConfetti();
-    }
-
-    if (star.x < -40 || star.collected) {
-      stars.splice(j, 1);
     }
   }
 }
 
-function handleGameOver() {
+function updateObstacles() {
+  for (let i = activeObstacles.length - 1; i >= 0; i--) {
+    const ob = activeObstacles[i];
+    ob.z += ob.speed;
+
+    // Collision check when object reaches foreground (z between 0.85 and 1.02)
+    if (ob.z >= 0.84 && ob.z <= 1.02) {
+      if (ob.lane === runner.currentLane) {
+        let isHit = false;
+
+        if (ob.def.type === 'low') {
+          // Low obstacle requires JUMP
+          if (!runner.isJumping || runner.jumpY < 42) {
+            isHit = true;
+          }
+        } else if (ob.def.type === 'high') {
+          // High obstacle requires DUCK / SLIDE
+          if (!runner.isDucking) {
+            isHit = true;
+          }
+        } else if (ob.def.type === 'blocker') {
+          // Blocker must be dodged (cannot jump or duck)
+          isHit = true;
+        }
+
+        if (isHit) {
+          triggerGameOver();
+          return;
+        }
+      }
+    }
+
+    // Remove past screen
+    if (ob.z > 1.15) {
+      activeObstacles.splice(i, 1);
+    }
+  }
+}
+
+function updateFoods() {
+  for (let j = activeFoods.length - 1; j >= 0; j--) {
+    const food = activeFoods[j];
+    food.z += food.speed;
+
+    // Collection check
+    if (!food.collected && food.z >= 0.82 && food.z <= 1.05) {
+      if (food.lane === runner.currentLane) {
+        food.collected = true;
+        gameFoodCollected++;
+        gameScore += 10;
+        playSfxFoodEat();
+
+        // Spawn floating indicator
+        floatingTexts.push({
+          x: runner.x,
+          y: runner.baseY - runner.jumpY - 20,
+          text: `+10 ${food.emoji}`,
+          alpha: 1.0
+        });
+
+        triggerMiniConfetti();
+      }
+    }
+
+    if (food.z > 1.15 || food.collected) {
+      activeFoods.splice(j, 1);
+    }
+  }
+}
+
+function triggerGameOver() {
   gameRunning = false;
   playSfxBump();
   playSfxFanfare();
@@ -869,18 +1200,21 @@ function handleGameOver() {
   if (gameScore > gameHighScore) {
     gameHighScore = gameScore;
     try {
-      localStorage.setItem('farm_runner_high_score', gameHighScore.toString());
+      localStorage.setItem('farm_subway_high_score', gameHighScore.toString());
     } catch (e) {}
   }
-  updateScoreDisplay();
+  updateHUD();
 
   // Populate Game Over Screen
+  const animal = currentAnimal || animals[0];
+  overFoodEmoji.textContent = animal.food_emoji || '🌽';
+  overFoodSummary.textContent = `${gameFoodCollected} تا ${animal.food_name || 'غذا'} جمع کردی!`;
   finalScoreEl.textContent = gameScore.toString();
-  
-  if (gameScore >= 20) {
-    gameEncouragement.textContent = "فوق‌العاده بود! تو یک دونده حرفه‌ای مزرعه‌ای! 🏆🥇";
-  } else if (gameScore >= 10) {
-    gameEncouragement.textContent = "خیلی عالی پریدی قهرمان! آفرین به تو! 🌟👏";
+
+  if (gameScore >= 250) {
+    gameEncouragement.textContent = "فوق‌العاده بود! تو سلطان ساب‌وی سرفرز مزرعه‌ای! 🏆🥇";
+  } else if (gameScore >= 120) {
+    gameEncouragement.textContent = "خیلی عالی دویدی و موانع رو جا گذاشتی! آفرین! 🌟👏";
   } else {
     gameEncouragement.textContent = "خیلی تلاش قشنگی بود! دوباره امتحان کن تا رکورد بزنی! 🏃‍♂️";
   }
@@ -888,99 +1222,225 @@ function handleGameOver() {
   gameOverScreen.classList.remove('hidden');
 }
 
-function updateScoreDisplay() {
-  gameScoreEl.textContent = gameScore.toString();
-  gameHighScoreEl.textContent = gameHighScore.toString();
+function updateHUD() {
+  hudFoodCount.textContent = gameFoodCollected.toString();
+  hudScoreValue.textContent = gameScore.toString();
+  hudHighValue.textContent = gameHighScore.toString();
 }
 
-function drawGameFrame() {
+// ==========================================================================
+// 3-LANE PERSPECTIVE RENDERING (Subway Surfers Farm Theme)
+// ==========================================================================
+function drawSubwaySurfersFrame() {
   if (!gameCtx) return;
   const w = gameCanvas.width;
   const h = gameCanvas.height;
 
-  // 1. Sky Gradient
-  const skyGrad = gameCtx.createLinearGradient(0, 0, 0, groundY);
-  skyGrad.addColorStop(0, '#BAE6FD');
-  skyGrad.addColorStop(1, '#DCFCE7');
+  // 1. Sky & Sun
+  const skyGrad = gameCtx.createLinearGradient(0, 0, 0, horizonY);
+  skyGrad.addColorStop(0, '#38BDF8');
+  skyGrad.addColorStop(1, '#BAE6FD');
   gameCtx.fillStyle = skyGrad;
-  gameCtx.fillRect(0, 0, w, h);
+  gameCtx.fillRect(0, 0, w, horizonY);
 
-  // 2. Distant Soft Hills
+  // Sun
+  gameCtx.font = "44px sans-serif";
+  gameCtx.fillText("☀️", w * 0.8, horizonY * 0.45);
+
+  // Distant clouds
+  gameCtx.font = "32px sans-serif";
+  gameCtx.fillText("☁️", ((gameFrame * 0.4) % (w + 100)) - 50, horizonY * 0.35);
+  gameCtx.fillText("☁️", ((gameFrame * 0.2 + w * 0.4) % (w + 100)) - 50, horizonY * 0.6);
+
+  // 2. Distant Mountains & Barn
   gameCtx.fillStyle = '#86EFAC';
   gameCtx.beginPath();
-  gameCtx.ellipse(150, groundY - 20, 220, 60, 0, 0, Math.PI * 2);
-  gameCtx.ellipse(550, groundY - 15, 260, 70, 0, 0, Math.PI * 2);
+  gameCtx.ellipse(w * 0.2, horizonY, w * 0.35, 55, 0, 0, Math.PI * 2);
+  gameCtx.ellipse(w * 0.8, horizonY, w * 0.4, 65, 0, 0, Math.PI * 2);
   gameCtx.fill();
 
-  // 3. Clouds
-  gameCtx.font = "26px sans-serif";
-  sceneryClouds.forEach(cloud => {
-    gameCtx.fillText(cloud.icon, cloud.x, cloud.y);
-  });
+  // Distant Red Barn at center horizon
+  gameCtx.font = "36px sans-serif";
+  gameCtx.textAlign = "center";
+  gameCtx.fillText("🏡", w / 2, horizonY + 8);
 
-  // 4. Background Fences
-  gameCtx.font = "18px sans-serif";
-  sceneryFences.forEach(fence => {
-    gameCtx.fillText("🪵", fence.x, groundY - 14);
-  });
+  // 3. Rolling Green Grass Meadows
+  const grassGrad = gameCtx.createLinearGradient(0, horizonY, 0, h);
+  grassGrad.addColorStop(0, '#22C55E');
+  grassGrad.addColorStop(1, '#15803D');
+  gameCtx.fillStyle = grassGrad;
+  gameCtx.fillRect(0, horizonY, w, h - horizonY);
 
-  // 5. Ground Path
-  gameCtx.fillStyle = '#16A34A';
-  gameCtx.fillRect(0, groundY, w, h - groundY);
+  // 4. The 3 Farm Track Lanes (Perspective Road)
+  const trackTopW = 70;
+  const trackBotW = Math.min(w * 0.9, 560);
+  const centerX = w / 2;
 
-  gameCtx.fillStyle = '#22C55E';
-  gameCtx.fillRect(0, groundY, w, 8);
+  // Dirt track bed
+  gameCtx.fillStyle = '#D97706';
+  gameCtx.beginPath();
+  gameCtx.moveTo(centerX - trackTopW / 2, horizonY);
+  gameCtx.lineTo(centerX + trackTopW / 2, horizonY);
+  gameCtx.lineTo(centerX + trackBotW / 2, trackBottomY + 40);
+  gameCtx.lineTo(centerX - trackBotW / 2, trackBottomY + 40);
+  gameCtx.closePath();
+  gameCtx.fill();
 
-  // Little grass tufts on ground
-  gameCtx.fillStyle = '#15803D';
-  for (let gx = 10; gx < w; gx += 40) {
-    gameCtx.fillRect((gx - (gameFrame * 2) % 40), groundY + 12, 10, 3);
+  // Sandy lane overlay
+  gameCtx.fillStyle = '#FBBF24';
+  gameCtx.beginPath();
+  gameCtx.moveTo(centerX - trackTopW * 0.46, horizonY);
+  gameCtx.lineTo(centerX + trackTopW * 0.46, horizonY);
+  gameCtx.lineTo(centerX + trackBotW * 0.46, trackBottomY + 40);
+  gameCtx.lineTo(centerX - trackBotW * 0.46, trackBottomY + 40);
+  gameCtx.closePath();
+  gameCtx.fill();
+
+  // Perspective Lane Dividers (Dashed White/Wood)
+  gameCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+  gameCtx.lineWidth = 3;
+  gameCtx.setLineDash([14, 14]);
+  gameCtx.lineDashOffset = -(gameFrame * gameSpeed * 1.5) % 28;
+
+  // Left divider
+  gameCtx.beginPath();
+  gameCtx.moveTo(centerX - trackTopW / 6, horizonY);
+  gameCtx.lineTo(centerX - trackBotW / 6, trackBottomY + 40);
+  gameCtx.stroke();
+
+  // Right divider
+  gameCtx.beginPath();
+  gameCtx.moveTo(centerX + trackTopW / 6, horizonY);
+  gameCtx.lineTo(centerX + trackBotW / 6, trackBottomY + 40);
+  gameCtx.stroke();
+  gameCtx.setLineDash([]); // reset
+
+  // Wooden fence posts on roadside
+  const fenceOffset = (gameFrame * gameSpeed * 1.8) % 60;
+  gameCtx.font = "24px sans-serif";
+  for (let fz = 0.15; fz <= 1.0; fz += 0.18) {
+    const curZ = (fz + (gameFrame * 0.015)) % 0.9 + 0.1;
+    const fy = horizonY + (trackBottomY - horizonY) * curZ;
+    const fw = trackTopW + (trackBotW - trackTopW) * curZ;
+    const scale = 0.4 + curZ * 0.8;
+    gameCtx.save();
+    gameCtx.font = `${Math.floor(28 * scale)}px sans-serif`;
+    gameCtx.fillText("🪵", centerX - fw / 2 - 18 * scale, fy);
+    gameCtx.fillText("🪵", centerX + fw / 2 + 18 * scale, fy);
+    gameCtx.restore();
   }
 
-  // 6. Draw Obstacles
-  obstacles.forEach(ob => {
-    gameCtx.font = "34px sans-serif";
-    gameCtx.textAlign = "center";
-    gameCtx.textBaseline = "bottom";
-    gameCtx.fillText(ob.symbol, ob.x + ob.w / 2, ob.y + ob.h);
+  // Helper function to project a point in 3-lane space
+  function projectLanePoint(lane, z) {
+    const y = horizonY + (trackBottomY - horizonY) * z;
+    const topLaneStep = trackTopW / 3;
+    const botLaneStep = trackBotW / 3;
+    const topX = (centerX - topLaneStep) + lane * topLaneStep;
+    const botX = (centerX - botLaneStep) + lane * botLaneStep;
+    const x = topX + (botX - topX) * z;
+    const scale = 0.35 + z * 0.75;
+    return { x, y, scale };
+  }
+
+  // 5. Render Distant Food Collectibles (Sorted by z for correct depth)
+  activeFoods.forEach(food => {
+    if (food.z > 0 && food.z <= 1.1) {
+      const p = projectLanePoint(food.lane, food.z);
+      const fontSize = Math.floor(48 * p.scale);
+      gameCtx.save();
+      gameCtx.font = `${fontSize}px sans-serif`;
+      gameCtx.textAlign = "center";
+      gameCtx.textBaseline = "middle";
+
+      // Floating bobbing effect
+      const foodBob = Math.sin((gameFrame * 0.2) + food.z * 10) * 8 * p.scale;
+      gameCtx.fillText(food.emoji, p.x, p.y - 25 * p.scale + foodBob);
+      gameCtx.restore();
+    }
   });
 
-  // 7. Draw Collectible Stars
-  stars.forEach(star => {
-    gameCtx.font = "24px sans-serif";
-    gameCtx.textAlign = "center";
-    gameCtx.textBaseline = "middle";
-    // Gentle floating bob
-    const starBob = Math.sin((gameFrame + star.x) * 0.1) * 4;
-    gameCtx.fillText("⭐", star.x + star.w / 2, star.y + star.h / 2 + starBob);
+  // 6. Render Moving Obstacles (Sorted by z)
+  activeObstacles.forEach(ob => {
+    if (ob.z > 0 && ob.z <= 1.1) {
+      const p = projectLanePoint(ob.lane, ob.z);
+      const fontSize = Math.floor(58 * p.scale);
+      gameCtx.save();
+      gameCtx.textAlign = "center";
+      gameCtx.textBaseline = "bottom";
+
+      if (ob.def.type === 'high') {
+        // High overhead obstacle (hanging line / branch)
+        gameCtx.font = `${fontSize}px sans-serif`;
+        gameCtx.fillText(ob.def.emoji, p.x, p.y - 50 * p.scale);
+
+        // Hanging warning sign
+        gameCtx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+        gameCtx.fillRect(p.x - 30 * p.scale, p.y - 88 * p.scale, 60 * p.scale, 16 * p.scale);
+        gameCtx.fillStyle = '#FFFFFF';
+        gameCtx.font = `bold ${Math.floor(10 * p.scale)}px Vazirmatn, sans-serif`;
+        gameCtx.fillText("بشین! 👇", p.x, p.y - 75 * p.scale);
+      } else {
+        // Low or Blocker obstacle on the ground
+        gameCtx.font = `${fontSize}px sans-serif`;
+        gameCtx.fillText(ob.def.emoji, p.x, p.y);
+      }
+      gameCtx.restore();
+    }
   });
 
-  // 8. Draw Player (The Active Animal!)
+  // 7. Render The Player (Selected Animal Running Forward!)
   const animal = currentAnimal || animals[0];
+  const playerRenderY = (runner.baseY - runner.jumpY) + runner.runBob;
+  const playerRenderX = runner.x;
+
   gameCtx.save();
-  gameCtx.font = "44px sans-serif";
   gameCtx.textAlign = "center";
   gameCtx.textBaseline = "bottom";
 
-  const renderX = player.x + player.w / 2;
-  const renderY = player.y + player.h + player.runBob;
+  // Ground shadow under animal
+  gameCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+  gameCtx.beginPath();
+  const shadowScale = Math.max(0.3, 1 - (runner.jumpY / 120));
+  gameCtx.ellipse(playerRenderX, runner.baseY + 12, (runner.width / 2) * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
+  gameCtx.fill();
 
-  // Jump tilt
-  if (!player.isGrounded) {
-    gameCtx.translate(renderX, renderY);
-    gameCtx.rotate(-0.15);
+  // Animal Emoji Character
+  if (runner.isDucking) {
+    // Ducking / Sliding posture (squished & low)
+    gameCtx.translate(playerRenderX, playerRenderY + 20);
+    gameCtx.scale(1.25, 0.6);
+    gameCtx.font = "78px sans-serif";
+    gameCtx.fillText(animal.emoji, 0, 0);
+
+    // Dust particles when sliding
+    gameCtx.font = "20px sans-serif";
+    gameCtx.fillText("💨", -30, -5);
+  } else if (runner.isJumping) {
+    // Jumping posture (high arc, slight joyful tilt)
+    gameCtx.translate(playerRenderX, playerRenderY);
+    gameCtx.rotate(-0.08);
+    gameCtx.font = "82px sans-serif";
     gameCtx.fillText(animal.emoji, 0, 0);
   } else {
-    gameCtx.fillText(animal.emoji, renderX, renderY);
+    // Running forward down the track!
+    // Slight side tilt when moving between lanes
+    const laneTilt = (runner.targetLane - runner.currentLane) * 0.12;
+    gameCtx.translate(playerRenderX, playerRenderY);
+    gameCtx.rotate(laneTilt);
+    gameCtx.font = "80px sans-serif";
+    gameCtx.fillText(animal.emoji, 0, 0);
   }
   gameCtx.restore();
 
-  // Shadow under player
-  gameCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-  gameCtx.beginPath();
-  const shadowW = Math.max(16, player.w - (groundY - player.y - player.h) * 0.4);
-  gameCtx.ellipse(renderX, groundY + 4, shadowW / 2, 4, 0, 0, Math.PI * 2);
-  gameCtx.fill();
+  // 8. Render Floating Score Texts
+  floatingTexts.forEach(ft => {
+    gameCtx.save();
+    gameCtx.font = "bold 24px Vazirmatn, sans-serif";
+    gameCtx.fillStyle = `rgba(245, 158, 11, ${ft.alpha})`;
+    gameCtx.textAlign = "center";
+    gameCtx.fillText(ft.text, ft.x, ft.y);
+    gameCtx.restore();
+  });
 }
 
 // ==========================================================================

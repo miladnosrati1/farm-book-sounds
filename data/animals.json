@@ -6,7 +6,9 @@
     "audio": "audio/hen.mp3",
     "sound_text": "قُد قُد قُدا!",
     "habitat": "مرغ‌دانی و لانه کاه",
-    "action_hint": "در حال دانه خوردن 🌾"
+    "action_hint": "در حال دانه خوردن 🌾",
+    "food_emoji": "🌽",
+    "food_name": "ذرت شیرین"
   },
   {
     "id": "cow",
@@ -15,7 +17,9 @@
     "audio": "audio/cow.mp3",
     "sound_text": "ماااااا!",
     "habitat": "چمن‌زار سرسبز",
-    "action_hint": "در حال چریدن علف 🍀"
+    "action_hint": "در حال چریدن علف 🍀",
+    "food_emoji": "🍀",
+    "food_name": "شبدر تازه"
   },
   {
     "id": "sheep",
@@ -24,7 +28,9 @@
     "audio": "audio/sheep.mp3",
     "sound_text": "بَععععع!",
     "habitat": "تپه علفی نرم",
-    "action_hint": "در حال دویدن در دشت 🌼"
+    "action_hint": "در حال دویدن در دشت 🌼",
+    "food_emoji": "🌿",
+    "food_name": "علف سبز"
   },
   {
     "id": "goose",
@@ -33,7 +39,9 @@
     "audio": "audio/goose.mp3",
     "sound_text": "غا غا غار!",
     "habitat": "کنار برکه آب",
-    "action_hint": "در حال بال زدن 💧"
+    "action_hint": "در حال بال زدن 💧",
+    "food_emoji": "🌾",
+    "food_name": "گندم طلایی"
   },
   {
     "id": "duck",
@@ -42,7 +50,9 @@
     "audio": "audio/duck.mp3",
     "sound_text": "کواک کواک!",
     "habitat": "داخل برکه نیلوفر",
-    "action_hint": "در حال شنا روی آب 🪷"
+    "action_hint": "در حال شنا روی آب 🪷",
+    "food_emoji": "🍞",
+    "food_name": "نان و سبزه"
   },
   {
     "id": "donkey",
@@ -51,7 +61,9 @@
     "audio": "audio/donkey.mp3",
     "sound_text": "عَررر عَررر!",
     "habitat": "کنار آسیاب و گاری کاه",
-    "action_hint": "در حال خوردن یونجه 🧺"
+    "action_hint": "در حال خوردن یونجه 🧺",
+    "food_emoji": "🥕",
+    "food_name": "هویج تازه"
   },
   {
     "id": "dog",
@@ -60,7 +72,9 @@
     "audio": "audio/dog.mp3",
     "sound_text": "هاپ هاپ!",
     "habitat": "درگاه چوبی مزرعه",
-    "action_hint": "در حال نگهبانی مزرعه 🪵"
+    "action_hint": "در حال نگهبانی مزرعه 🪵",
+    "food_emoji": "🦴",
+    "food_name": "استخوان لذیذ"
   },
   {
     "id": "horse",
@@ -69,7 +83,9 @@
     "audio": "audio/horse.mp3",
     "sound_text": "هیهااااء!",
     "habitat": "محوطه اصطبل و نرده‌ها",
-    "action_hint": "در حال تاختن شاد 🏇"
+    "action_hint": "در حال تاختن شاد 🏇",
+    "food_emoji": "🍎",
+    "food_name": "سیب سرخ"
   },
   {
     "id": "goat",
@@ -78,6 +94,8 @@
     "audio": "audio/goat.mp3",
     "sound_text": "مَععععع!",
     "habitat": "صخره سنگی کوچک",
-    "action_hint": "در حال پریدن روی سنگ‌ها 🪨"
+    "action_hint": "در حال پریدن روی سنگ‌ها 🪨",
+    "food_emoji": "🥦",
+    "food_name": "کلم بروکلی"
   }
 ]

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>صدای حیوانات مزرعه | کتاب صوتی کودک</title>
+  <title>صدای حیوانات مزرعه | کتاب صوتی و بازی ساب‌وی سرفرز کودک</title>
   
   <!-- SEO & Social Meta -->
-  <meta name="description" content="پخش آنلاین و بازی تعاملی صدای حیوانات مزرعه برای کتاب چاپی کودک با اسکن کیوآرکد (QR Code)">
+  <meta name="description" content="پخش آنلاین و بازی تعاملی دونده مزرعه (سبک ساب‌وی سرفرز) برای کتاب چاپی کودک با اسکن کیوآرکد (QR Code)">
   <meta name="theme-color" content="#4ADE80">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- Persian Font: Vazirmatn -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,7 +48,7 @@
 
         <!-- Interactive Animal Avatar with Game Callout -->
         <div class="avatar-section">
-          <div class="avatar-container" id="avatar-container" role="button" tabindex="0" title="برای شروع بازی کلیک کن!">
+          <div class="avatar-container" id="avatar-container" role="button" tabindex="0" title="برای شروع بازی ساب‌وی سرفرز کلیک کن!">
             <div class="avatar-halo"></div>
             <div class="avatar-emoji" id="active-emoji">🌾</div>
             <div class="sound-waves" id="sound-waves">
@@ -63,10 +63,10 @@
           </div>
 
           <!-- Kid-Friendly Game Invitation Callout -->
-          <button class="game-callout-btn" id="btn-start-game" title="شروع بازی دایناسور مزرعه با این حیوان">
+          <button class="game-callout-btn" id="btn-start-game" title="شروع بازی دونده مزرعه با این حیوان">
             <span class="callout-icon">🎮</span>
             <span class="callout-text" id="callout-text">روی عکسم بزن تا با هم بازی کنیم!</span>
-            <span class="callout-badge">پَرِش در مزرعه 🏃‍♂️</span>
+            <span class="callout-badge" id="callout-food-badge">جمع‌آوری غذا 🌾</span>
           </button>
         </div>
 
@@ -285,7 +285,7 @@
           <p>این سامانه صوتی و بازی تعاملی به عنوان مکمل اختصاصی کتاب چاپی کودک طراحی شده است. هر صفحه کتاب دارای کیوآرکد مجزاست که با دوربین گوشی اسکن می‌شود:</p>
           <ul>
             <li><strong>پخش سریع صدا:</strong> بلافاصله با اسکن کد، صدای طبیعی حیوان بدون تبلیغ پخش می‌شود.</li>
-            <li><strong>بازی پرش مزرعه (Dino Runner):</strong> با کلیک روی عکس حیوان، بازی دونده شاد مزرعه با شخصیت همان حیوان اجرا می‌شود.</li>
+            <li><strong>بازی ساب‌وی سرفرز مزرعه:</strong> با لمس عکس حیوان، بازی دونده ۳ لاینه تمام‌صفحه با شخصیت همان حیوان اجرا می‌شود تا غذای محبوبش را جمع کند و با سوایپ به چپ/راست، پرش و نشستن از موانع عبور کند!</li>
             <li><strong>گشت‌وگذار در مزرعه:</strong> کودک می‌تواند در مزرعه آزادانه بگردد، با لمس حیوانات صدای هر کدام را کشف کند و جایگاه طبیعی آن‌ها را یاد بگیرد.</li>
           </ul>
         </div>
@@ -297,93 +297,131 @@
   </div>
 
   <!-- =========================================================================
-       FARM RUNNER MINI-GAME MODAL (Google Dino Style)
+       SUBWAY SURFERS STYLE FULLSCREEN FARM RUNNER MINI-GAME
        ========================================================================= -->
-  <div class="game-modal-backdrop hidden" id="game-modal" role="dialog" aria-modal="true" aria-label="بازی پرش مزرعه">
-    <div class="game-modal-container">
-      
-      <!-- Game Top Bar -->
-      <div class="game-top-bar">
-        <div class="game-character-badge">
-          <span class="game-char-emoji" id="game-player-emoji">🐔</span>
-          <span class="game-char-name" id="game-player-name">مرغ قهرمان</span>
-        </div>
+  <div class="game-fullscreen-modal hidden" id="game-modal" role="dialog" aria-modal="true" aria-label="بازی دونده ساب‌وی سرفرز مزرعه">
+    
+    <!-- Game Canvas Viewport (True Fullscreen) -->
+    <canvas id="game-canvas"></canvas>
 
-        <div class="game-scores-wrapper">
-          <div class="score-pill current-score">
-            <span>🌟 امتیاز: </span>
-            <strong id="game-score">۰</strong>
-          </div>
-          <div class="score-pill best-score">
-            <span>🏆 رکورد: </span>
-            <strong id="game-high-score">۰</strong>
-          </div>
-        </div>
+    <!-- Top HUD Floating Overlay -->
+    <div class="game-hud-bar">
+      <!-- Pause / Menu Button -->
+      <button id="btn-pause-game" class="hud-circle-btn btn-pause" title="توقف و بازگشت به منو" aria-label="توقف">
+        ⏸️
+      </button>
 
-        <div class="game-actions">
-          <button id="btn-game-sound" class="game-btn-icon" title="قطع / وصل صدای بازی" aria-label="صدا">
-            🔊
-          </button>
-          <button id="btn-close-game" class="game-btn-icon btn-close" title="خروج از بازی" aria-label="بستن">
-            ✖️
-          </button>
-        </div>
+      <!-- Active Mascot & Food Pill -->
+      <div class="hud-pill hud-food-pill">
+        <span class="hud-char-avatar" id="hud-char-avatar">🐔</span>
+        <span class="hud-food-icon" id="hud-food-icon">🌽</span>
+        <strong id="hud-food-count">۰</strong>
       </div>
 
-      <!-- Game Canvas Viewport -->
-      <div class="game-canvas-wrapper" id="game-canvas-wrapper">
-        <canvas id="game-canvas" width="800" height="340"></canvas>
-        
-        <!-- Touch Jump Helper for Small Fingers -->
-        <button id="btn-touch-jump" class="touch-jump-btn" aria-label="پرش">
-          <span>🚀 بپَر!</span>
-        </button>
-
-        <!-- Ready / Start Screen Overlay -->
-        <div class="game-overlay-screen" id="game-start-screen">
-          <div class="overlay-card">
-            <div class="overlay-mascot" id="start-screen-emoji">🐔</div>
-            <h3 class="overlay-title">بازی پرش در مزرعه!</h3>
-            <p class="overlay-desc">از روی نرده‌ها، بوته‌ها و دسته‌های کاه بپر و ستاره جمع کن!</p>
-            <div class="control-hints">
-              <span>📱 لمس صفحه برای پرش</span>
-              <span>⌨️ کلید Space یا فلش بالا</span>
-            </div>
-            <button id="btn-play-game" class="btn-start-play">
-              🚀 شروع بازی شاد
-            </button>
-          </div>
-        </div>
-
-        <!-- Game Over Screen Overlay -->
-        <div class="game-overlay-screen hidden" id="game-over-screen">
-          <div class="overlay-card game-over-card">
-            <div class="celebrate-emoji">🎉</div>
-            <h3 class="overlay-title" id="game-over-title">آفرین قهرمان مزرعه!</h3>
-            <p class="game-result-text">
-              امتیاز شما: <strong id="final-score" class="highlight-score">۰</strong> ستاره 🌟
-            </p>
-            <p class="game-encouragement" id="game-encouragement">خیلی عالی دویدی و پریدی!</p>
-            
-            <div class="game-over-buttons">
-              <button id="btn-restart-game" class="btn-start-play btn-restart">
-                🔄 دوباره بازی کنیم!
-              </button>
-              <button id="btn-exit-to-farm" class="btn-secondary-game">
-                🏡 بازگشت به مزرعه
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      
-      <!-- Game Bottom Help -->
-      <div class="game-footer-hint">
-        💡 روی صفحه گوشی ضربه بزن تا بپری! ستاره‌ها امتیاز اضافه دارن ⭐
+      <!-- Score Pill -->
+      <div class="hud-pill hud-score-pill">
+        <span class="hud-star-icon">🌟</span>
+        <strong id="hud-score-value">۰</strong>
       </div>
 
+      <!-- High Score Pill (Desktop/Tablet) -->
+      <div class="hud-pill hud-high-pill">
+        <span>🏆</span>
+        <strong id="hud-high-value">۰</strong>
+      </div>
+
+      <!-- Sound Toggle Button -->
+      <button id="btn-game-sound" class="hud-circle-btn btn-sound" title="قطع / وصل صدای بازی" aria-label="صدا">
+        🔊
+      </button>
     </div>
+
+    <!-- On-Screen Gesture Control Helpers -->
+    <div class="game-gesture-hints" id="game-gesture-hints">
+      <div class="gesture-badge">👈 جابجایی بین ۳ لاین 👉</div>
+      <div class="gesture-badge">👆 یا لمس برای پرش • 👇 برای نشستن</div>
+    </div>
+
+    <!-- Ready / Start Screen Overlay -->
+    <div class="game-overlay-screen" id="game-start-screen">
+      <div class="overlay-card start-card">
+        <div class="overlay-mascot" id="start-screen-emoji">🐔</div>
+        <h3 class="overlay-title" id="start-screen-title">بازی دونده مزرعه!</h3>
+        <p class="overlay-desc" id="start-screen-desc">
+          به <strong id="start-animal-name">مرغ</strong> کمک کن تا <strong id="start-food-name">ذرت‌های خوشمزه</strong> رو جمع کنه و از روی موانع بپره!
+        </p>
+
+        <div class="subway-control-guide">
+          <div class="guide-item">
+            <span class="guide-icon">↔️</span>
+            <span><strong>سوایپ چپ و راست:</strong> جابجایی بین ۳ لاین مزرعه</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-icon">👆</span>
+            <span><strong>سوایپ بالا یا ضربه روی صفحه:</strong> پرش از روی نرده، سنگ و کاه</span>
+          </div>
+          <div class="guide-item">
+            <span class="guide-icon">👇</span>
+            <span><strong>سوایپ پایین:</strong> نشستن و سرخوردن زیر طناب لباس و شاخه‌ها</span>
+          </div>
+        </div>
+
+        <button id="btn-play-game" class="btn-start-play">
+          🚀 شروع دویدن شاد!
+        </button>
+      </div>
+    </div>
+
+    <!-- Pause Menu Screen Overlay -->
+    <div class="game-overlay-screen hidden" id="game-pause-screen">
+      <div class="overlay-card pause-card">
+        <div class="pause-icon-big">⏸️</div>
+        <h3 class="overlay-title">بازی متوقف شد</h3>
+        <p class="pause-stats-text">
+          غذای جمع‌شده: <strong id="pause-food-count">۰</strong> • امتیاز: <strong id="pause-score-value">۰</strong> 🌟
+        </p>
+
+        <div class="game-menu-buttons">
+          <button id="btn-resume-game" class="btn-start-play btn-resume">
+            ▶️ ادامه بازی
+          </button>
+          <button id="btn-restart-from-pause" class="btn-secondary-game">
+            🔄 شروع دوباره
+          </button>
+          <button id="btn-exit-to-main" class="btn-danger-game">
+            🏡 بازگشت به مزرعه و کتاب
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen Overlay -->
+    <div class="game-overlay-screen hidden" id="game-over-screen">
+      <div class="overlay-card game-over-card">
+        <div class="celebrate-emoji">🎉</div>
+        <h3 class="overlay-title" id="game-over-title">آفرین قهرمان مزرعه!</h3>
+        
+        <div class="game-over-food-badge">
+          <span id="over-food-emoji">🌽</span>
+          <span id="over-food-summary">۰ ذرت خوشمزه جمع کردی!</span>
+        </div>
+
+        <p class="game-result-text">
+          امتیاز کل شما: <strong id="final-score" class="highlight-score">۰</strong> ستاره 🌟
+        </p>
+        <p class="game-encouragement" id="game-encouragement">خیلی عالی دویدی و پریدی!</p>
+        
+        <div class="game-over-buttons">
+          <button id="btn-restart-game" class="btn-start-play btn-restart">
+            🔄 دوباره بازی کنیم!
+          </button>
+          <button id="btn-exit-to-farm" class="btn-secondary-game">
+            🏡 بازگشت به مزرعه و کتاب
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Audio Element for Animal Real Sounds -->
