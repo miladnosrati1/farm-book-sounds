@@ -183,6 +183,12 @@ function setup3DFarmDiorama() {
   let currentRotateY = 0;
 
   function updateTilt() {
+    // If currently zoomed into an animal, do not let mouse tilt disrupt the focus!
+    if (landscape.classList.contains('is-zoomed-habitat')) {
+      rafId = null;
+      return;
+    }
+
     currentRotateX += (targetRotateX - currentRotateX) * 0.12;
     currentRotateY += (targetRotateY - currentRotateY) * 0.12;
     landscape.style.transform = `rotateX(${currentRotateX.toFixed(2)}deg) rotateY(${currentRotateY.toFixed(2)}deg) scale(0.97)`;
@@ -195,6 +201,8 @@ function setup3DFarmDiorama() {
   }
 
   function handleMove(clientX, clientY) {
+    if (landscape.classList.contains('is-zoomed-habitat')) return;
+
     const rect = container.getBoundingClientRect();
     const x = clientX - rect.left;
     const y = clientY - rect.top;
@@ -212,6 +220,7 @@ function setup3DFarmDiorama() {
   });
 
   container.addEventListener('mouseleave', () => {
+    if (landscape.classList.contains('is-zoomed-habitat')) return;
     targetRotateX = 15;
     targetRotateY = 0;
     if (!rafId) rafId = requestAnimationFrame(updateTilt);
@@ -231,21 +240,55 @@ function getUrlAnimalId() {
   return 'hen';
 }
 
-// Zoom into selected animal station inside 3D farm diorama
+// Zoom into selected animal station inside 3D farm diorama with precision centering
 function zoomToHabitat(habitatElem) {
   const landscape = document.getElementById('farm-landscape');
+  const container = document.getElementById('farm-view');
   const resetBtn = document.getElementById('farm-zoom-reset-btn');
-  if (!landscape || !habitatElem) return;
+  if (!landscape || !container || !habitatElem) return;
 
-  const hLeft = habitatElem.offsetLeft + (habitatElem.offsetWidth / 2);
-  const hTop = habitatElem.offsetTop + (habitatElem.offsetHeight / 2);
+  // Temporarily reset zoom to compute true unscaled geometry
+  const wasZoomed = landscape.classList.contains('is-zoomed-habitat');
+  if (wasZoomed) {
+    landscape.classList.remove('is-zoomed-habitat');
+    landscape.style.transform = '';
+  }
 
-  const originX = Math.round((hLeft / landscape.offsetWidth) * 100);
-  const originY = Math.round((hTop / landscape.offsetHeight) * 100);
+  // Get true bounding rects regardless of CSS nesting (e.g. duck in pond)
+  const hRect = habitatElem.getBoundingClientRect();
+  const cRect = container.getBoundingClientRect();
+  const lRect = landscape.getBoundingClientRect();
 
-  landscape.style.transformOrigin = `${originX}% ${originY}%`;
+  // Habitat center point relative to unscaled landscape
+  const habitatCenterX = (hRect.left + hRect.width / 2) - lRect.left;
+  const habitatCenterY = (hRect.top + hRect.height / 2) - lRect.top;
+
+  // Center coordinates of container viewport
+  const containerCenterX = cRect.width / 2;
+  const containerCenterY = cRect.height / 2;
+
+  // Cinematic zoom scale
+  const zoomScale = 1.85;
+
+  // Mathematically align animal center point precisely with viewport center!
+  const transX = Math.round(containerCenterX - (habitatCenterX * zoomScale));
+  const transY = Math.round(containerCenterY - (habitatCenterY * zoomScale));
+
+  landscape.style.transformOrigin = '0 0';
+  landscape.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+  landscape.style.transform = `translate3d(${transX}px, ${transY}px, 45px) scale(${zoomScale}) rotateX(8deg)`;
   landscape.classList.add('is-zoomed-habitat');
+
   if (resetBtn) resetBtn.classList.remove('hidden');
+
+  // Spotlight clicked animal & dim others
+  document.querySelectorAll('.farm-habitat').forEach(h => {
+    if (h === habitatElem) {
+      h.classList.add('is-focused-animal');
+    } else {
+      h.classList.remove('is-focused-animal');
+    }
+  });
 }
 
 // Zoom out to view full 3D farm diorama
@@ -254,8 +297,15 @@ function zoomOutFarm() {
   const resetBtn = document.getElementById('farm-zoom-reset-btn');
   if (!landscape) return;
 
-  landscape.classList.remove('is-zoomed-habitat');
+  landscape.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
   landscape.style.transformOrigin = '50% 50%';
+  landscape.style.transform = 'rotateX(15deg) rotateY(0deg) scale(0.97)';
+  landscape.classList.remove('is-zoomed-habitat');
+
+  document.querySelectorAll('.farm-habitat').forEach(h => {
+    h.classList.remove('is-focused-animal');
+  });
+
   if (resetBtn) resetBtn.classList.add('hidden');
 }
 
@@ -398,14 +448,8 @@ function selectAnimal(animalId, isInitialLoad = false) {
   const targetHabitat = document.getElementById(`farm-animal-${found.id}`);
   if (targetHabitat) {
     targetHabitat.classList.add('is-active-habitat');
-    // Scroll farm container smoothly to bring animal into center view on mobile
-    if (farmView) {
-      const habitatLeft = targetHabitat.offsetLeft;
-      const containerWidth = farmView.clientWidth;
-      farmView.scrollTo({
-        left: habitatLeft - (containerWidth / 2) + 40,
-        behavior: 'smooth'
-      });
+    if (!isInitialLoad) {
+      zoomToHabitat(targetHabitat);
     }
   }
 
@@ -1312,17 +1356,18 @@ function spawnSubwayElements() {
     nextSpawnDistance = 270 + Math.random() * 60;
     const baseSpeed = 0.0050 * (gameSpeed / 2.0);
 
-    // ANTI-CHEAT FORMATIONS:
-    // Every obstacle requires deliberate action (cannot be bypassed by lazily stepping to an empty side!)
+    // STRICT ANTI-CHEAT FORMATIONS:
+    // Every single obstacle encounter is an active challenge requiring JUMP or DUCK!
+    // No empty lanes where player can just passively run through!
     const FORMATION_CHOICES = [
-      'FULL_ROAD_FENCE',              // 3-lane continuous fence -> Must JUMP!
-      'FULL_ROAD_BRANCH',             // 3-lane continuous overhead branch -> Must DUCK!
-      'TREES_FLANK_CENTER_LOG',       // Giant trees block outer lanes, log in center -> Must JUMP center!
-      'GIANT_TRACTOR_LEFT',           // Giant 2-lane tractor blocks lanes 0 & 1 -> Must steer to lane 2!
-      'GIANT_TRACTOR_RIGHT',          // Giant 2-lane tractor blocks lanes 1 & 2 -> Must steer to lane 0!
-      'GIANT_TRACTOR_AND_FENCE_RIGHT',// Tractor blocks lanes 0 & 1, fence in lane 2 -> Must steer & JUMP!
-      'GIANT_TRACTOR_AND_FENCE_LEFT', // Tractor blocks lanes 1 & 2, fence in lane 0 -> Must steer & JUMP!
-      'FOOD_CELEBRATION'              // Pure celebration food trail
+      'FULL_ROAD_FENCE',               // 3-lane continuous fence -> Must JUMP!
+      'FULL_ROAD_BRANCH',              // 3-lane continuous overhead branch -> Must DUCK!
+      'TREES_FLANK_CENTER_LOG',        // Giant trees block outer lanes, log in center -> Must JUMP center!
+      'GIANT_TRACTOR_AND_FENCE_RIGHT', // Tractor blocks lanes 0 & 1, fence in lane 2 -> Must steer & JUMP!
+      'GIANT_TRACTOR_AND_FENCE_LEFT',  // Tractor blocks lanes 1 & 2, fence in lane 0 -> Must steer & JUMP!
+      'GIANT_TRACTOR_AND_BRANCH_RIGHT',// Tractor blocks lanes 0 & 1, branch in lane 2 -> Must steer & DUCK!
+      'GIANT_TRACTOR_AND_BRANCH_LEFT', // Tractor blocks lanes 1 & 2, branch in lane 0 -> Must steer & DUCK!
+      'FULL_ROAD_WATER_CANAL'          // Muddy water ditch across all 3 lanes -> Must JUMP!
     ];
 
     let choiceIdx;
@@ -1427,56 +1472,6 @@ function spawnSubwayElements() {
         break;
       }
 
-      case 'GIANT_TRACTOR_LEFT': {
-        // Giant Tractor blocks lanes 0 & 1 (occupies 2 full lanes). Only lane 2 is open!
-        activeObstacles.push({
-          lane: 0.5,
-          occupiedLanes: [0, 1],
-          isGiant: true,
-          z: 0.04,
-          speed: baseSpeed,
-          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true, needDodge: true }
-        });
-
-        // Safe guide food treats in lane 2
-        for (let k = 0; k < 2; k++) {
-          activeFoods.push({
-            lane: 2,
-            z: 0.04 - (k * 0.07),
-            speed: baseSpeed,
-            emoji: animal.food_emoji || '🌽',
-            collected: false,
-            isAirborne: false
-          });
-        }
-        break;
-      }
-
-      case 'GIANT_TRACTOR_RIGHT': {
-        // Giant Tractor blocks lanes 1 & 2 (occupies 2 full lanes). Only lane 0 is open!
-        activeObstacles.push({
-          lane: 1.5,
-          occupiedLanes: [1, 2],
-          isGiant: true,
-          z: 0.04,
-          speed: baseSpeed,
-          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true, needDodge: true }
-        });
-
-        // Safe guide food treats in lane 0
-        for (let k = 0; k < 2; k++) {
-          activeFoods.push({
-            lane: 0,
-            z: 0.04 - (k * 0.07),
-            speed: baseSpeed,
-            emoji: animal.food_emoji || '🌽',
-            collected: false,
-            isAirborne: false
-          });
-        }
-        break;
-      }
-
       case 'GIANT_TRACTOR_AND_FENCE_RIGHT': {
         // Giant Tractor blocks lanes 0 & 1, while Lane 2 has a low fence!
         // Player must steer to lane 2 AND jump over the fence (cannot dodge left because of tractor)!
@@ -1533,18 +1528,71 @@ function spawnSubwayElements() {
         break;
       }
 
-      case 'FOOD_CELEBRATION':
+      case 'GIANT_TRACTOR_AND_BRANCH_RIGHT': {
+        // Giant Tractor blocks lanes 0 & 1, while Lane 2 has an overhead branch!
+        // Player must steer to lane 2 AND duck/slide!
+        activeObstacles.push({
+          lane: 0.5,
+          occupiedLanes: [0, 1],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 2,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'high', emoji: '🍃', label: 'شاخه درخت', needDuck: true }
+        });
+        break;
+      }
+
+      case 'GIANT_TRACTOR_AND_BRANCH_LEFT': {
+        // Giant Tractor blocks lanes 1 & 2, while Lane 0 has an overhead branch!
+        // Player must steer to lane 0 AND duck/slide!
+        activeObstacles.push({
+          lane: 1.5,
+          occupiedLanes: [1, 2],
+          isGiant: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'blocker', emoji: '🚜', label: 'تراکتور غول‌پیکر', isGiant: true }
+        });
+        activeObstacles.push({
+          lane: 0,
+          z: 0.04,
+          speed: baseSpeed,
+          def: { type: 'high', emoji: '🍃', label: 'شاخه درخت', needDuck: true }
+        });
+        break;
+      }
+
+      case 'FULL_ROAD_WATER_CANAL':
       default: {
-        // Pure celebration food trail
-        const foodLane = Math.floor(Math.random() * 3);
-        for (let k = 0; k < 3; k++) {
+        // Muddy river water canal across ALL 3 lanes. Jumping is mandatory!
+        activeObstacles.push({
+          lane: 1,
+          isFullRoad: true,
+          z: 0.04,
+          speed: baseSpeed,
+          def: {
+            type: 'low',
+            emoji: '💧',
+            label: 'چاله آب سراسری',
+            isFullRoad: true,
+            isWaterCanal: true,
+            needJump: true
+          }
+        });
+        for (let l = 0; l < 3; l++) {
           activeFoods.push({
-            lane: foodLane,
-            z: 0.04 - (k * 0.07),
+            lane: l,
+            z: 0.04,
             speed: baseSpeed,
             emoji: animal.food_emoji || '🌽',
             collected: false,
-            isAirborne: false
+            isAirborne: true
           });
         }
         break;
@@ -1683,35 +1731,211 @@ function drawSubwaySurfersFrame() {
   const w = gameCanvas.width;
   const h = gameCanvas.height;
 
-  // 1. Sky & Sun
+  // 1. Scenic Storybook Sky & Sun
   const skyGrad = gameCtx.createLinearGradient(0, 0, 0, horizonY);
-  skyGrad.addColorStop(0, '#38BDF8');
-  skyGrad.addColorStop(1, '#BAE6FD');
+  skyGrad.addColorStop(0, '#0284C7');  // Deep morning azure
+  skyGrad.addColorStop(0.32, '#38BDF8'); // Fresh sky blue
+  skyGrad.addColorStop(0.65, '#BAE6FD'); // Light morning cyan
+  skyGrad.addColorStop(0.85, '#FEF08A'); // Warm sunrise light
+  skyGrad.addColorStop(1.0, '#FDE047');  // Golden morning haze on horizon
   gameCtx.fillStyle = skyGrad;
   gameCtx.fillRect(0, 0, w, horizonY);
 
-  // Sun
-  gameCtx.font = "44px sans-serif";
-  gameCtx.fillText("☀️", w * 0.8, horizonY * 0.45);
+  // Radiant Golden Sun with glowing coronal rings
+  const sunX = w * 0.82;
+  const sunY = horizonY * 0.44;
+  const sunRadius = 24;
 
-  // Distant clouds
-  gameCtx.font = "32px sans-serif";
-  gameCtx.fillText("☁️", ((gameFrame * 0.4) % (w + 100)) - 50, horizonY * 0.35);
-  gameCtx.fillText("☁️", ((gameFrame * 0.2 + w * 0.4) % (w + 100)) - 50, horizonY * 0.6);
-
-  // 2. Distant Mountains & Barn
-  gameCtx.fillStyle = '#86EFAC';
+  // Outer golden coronal glow
+  const sunGlowGrad = gameCtx.createRadialGradient(sunX, sunY, 12, sunX, sunY, 80);
+  sunGlowGrad.addColorStop(0, 'rgba(254, 240, 138, 0.75)');
+  sunGlowGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.3)');
+  sunGlowGrad.addColorStop(1, 'transparent');
+  gameCtx.fillStyle = sunGlowGrad;
   gameCtx.beginPath();
-  gameCtx.ellipse(w * 0.2, horizonY, w * 0.35, 55, 0, 0, Math.PI * 2);
-  gameCtx.ellipse(w * 0.8, horizonY, w * 0.4, 65, 0, 0, Math.PI * 2);
+  gameCtx.arc(sunX, sunY, 80, 0, Math.PI * 2);
   gameCtx.fill();
 
-  // Distant Red Barn at center horizon
-  gameCtx.font = "36px sans-serif";
-  gameCtx.textAlign = "center";
-  gameCtx.fillText("🏡", w / 2, horizonY + 8);
+  // Sun Core
+  gameCtx.fillStyle = '#FEF9C3';
+  gameCtx.beginPath();
+  gameCtx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+  gameCtx.fill();
+  gameCtx.strokeStyle = '#F59E0B';
+  gameCtx.lineWidth = 3;
+  gameCtx.stroke();
 
-  // 3. Rolling Green Grass Meadows
+  // Translucent Pastel Rainbow on the left sky
+  gameCtx.save();
+  const rbX = w * 0.16;
+  const rbY = horizonY + 25;
+  const rbRadius = horizonY * 0.96;
+  const rainbowColors = [
+    'rgba(239, 68, 68, 0.22)',
+    'rgba(245, 158, 11, 0.22)',
+    'rgba(250, 204, 21, 0.22)',
+    'rgba(34, 197, 94, 0.22)',
+    'rgba(59, 130, 246, 0.22)'
+  ];
+  rainbowColors.forEach((col, idx) => {
+    gameCtx.strokeStyle = col;
+    gameCtx.lineWidth = 5;
+    gameCtx.beginPath();
+    gameCtx.arc(rbX, rbY, rbRadius - (idx * 5), Math.PI, Math.PI * 2);
+    gameCtx.stroke();
+  });
+  gameCtx.restore();
+
+  // Distant Hot Air Balloon drifting
+  const balloonBob = Math.sin(gameFrame * 0.03) * 5;
+  const balloonX = ((w * 0.24) + Math.cos(gameFrame * 0.005) * 18);
+  const balloonY = horizonY * 0.38 + balloonBob;
+  gameCtx.font = "28px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("🎈", balloonX, balloonY);
+
+  // Distant Fluffy Clouds drifting with parallax speeds
+  gameCtx.font = "32px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("☁️", ((gameFrame * 0.3) % (w + 140)) - 70, horizonY * 0.28);
+  gameCtx.fillText("☁️", ((gameFrame * 0.18 + w * 0.45) % (w + 140)) - 70, horizonY * 0.52);
+
+  // Flock of distant birds gliding in formation
+  const birdBaseX = ((gameFrame * 0.6 + w * 0.6) % (w + 160)) - 80;
+  const birdBaseY = horizonY * 0.22;
+  gameCtx.font = "16px sans-serif";
+  gameCtx.fillText("🕊️", birdBaseX, birdBaseY);
+  gameCtx.fillText("🕊️", birdBaseX + 18, birdBaseY - 6);
+  gameCtx.fillText("🕊️", birdBaseX + 36, birdBaseY + 4);
+
+  // 2. Rolling Horizon Hills & Far Fields
+  // Layer 2A: Far Misty Blue-Green Mountain Silhouettes
+  gameCtx.fillStyle = '#6EE7B7';
+  gameCtx.beginPath();
+  gameCtx.moveTo(0, horizonY);
+  gameCtx.quadraticCurveTo(w * 0.25, horizonY - 45, w * 0.5, horizonY - 10);
+  gameCtx.quadraticCurveTo(w * 0.75, horizonY - 50, w, horizonY - 15);
+  gameCtx.lineTo(w, horizonY + 30);
+  gameCtx.lineTo(0, horizonY + 30);
+  gameCtx.closePath();
+  gameCtx.fill();
+
+  // Layer 2B: Golden Wheat Fields & Emerald Pastures
+  gameCtx.fillStyle = '#FDE047';
+  gameCtx.beginPath();
+  gameCtx.moveTo(0, horizonY);
+  gameCtx.quadraticCurveTo(w * 0.35, horizonY - 26, w * 0.65, horizonY - 5);
+  gameCtx.quadraticCurveTo(w * 0.85, horizonY - 32, w, horizonY - 8);
+  gameCtx.lineTo(w, horizonY + 30);
+  gameCtx.lineTo(0, horizonY + 30);
+  gameCtx.closePath();
+  gameCtx.fill();
+
+  // Hay bales on golden hills
+  gameCtx.font = "18px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("🌾", w * 0.12, horizonY - 8);
+  gameCtx.fillText("🌾", w * 0.88, horizonY - 12);
+
+  // Distant grazing sheep & cows on green slopes
+  gameCtx.font = "20px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("🐑", w * 0.22, horizonY - 2);
+  gameCtx.fillText("🐄", w * 0.74, horizonY - 4);
+
+  // 3. Detailed Farm Architecture on Horizon
+  // 3A: Classic Dutch Windmill on Left Hill (with animated rotating blades!)
+  const millX = w * 0.30;
+  const millY = horizonY - 6;
+
+  // Windmill timber tower
+  gameCtx.fillStyle = '#78350F';
+  gameCtx.beginPath();
+  gameCtx.moveTo(millX - 12, millY);
+  gameCtx.lineTo(millX - 8, millY - 28);
+  gameCtx.lineTo(millX + 8, millY - 28);
+  gameCtx.lineTo(millX + 12, millY);
+  gameCtx.closePath();
+  gameCtx.fill();
+
+  // Windmill roof dome
+  gameCtx.fillStyle = '#B45309';
+  gameCtx.beginPath();
+  gameCtx.arc(millX, millY - 28, 8, Math.PI, Math.PI * 2);
+  gameCtx.fill();
+
+  // Rotating 4-blade timber rotor
+  gameCtx.save();
+  gameCtx.translate(millX, millY - 28);
+  gameCtx.rotate(gameFrame * 0.025);
+  gameCtx.strokeStyle = '#FFFFFF';
+  gameCtx.lineWidth = 2.5;
+  for (let b = 0; b < 4; b++) {
+    gameCtx.rotate(Math.PI / 2);
+    gameCtx.beginPath();
+    gameCtx.moveTo(0, 0);
+    gameCtx.lineTo(0, -22);
+    gameCtx.stroke();
+    // Sail grid
+    gameCtx.fillStyle = 'rgba(254, 240, 138, 0.85)';
+    gameCtx.fillRect(2, -20, 5, 16);
+  }
+  gameCtx.restore();
+
+  // 3B: Classic Detailed Red Barn at Center Horizon
+  const barnX = w * 0.52;
+  const barnY = horizonY;
+
+  // Red barn building
+  gameCtx.fillStyle = '#DC2626';
+  gameCtx.fillRect(barnX - 22, barnY - 24, 44, 24);
+
+  // Gambrel Roof with white trim
+  gameCtx.fillStyle = '#991B1B';
+  gameCtx.beginPath();
+  gameCtx.moveTo(barnX - 25, barnY - 24);
+  gameCtx.lineTo(barnX - 14, barnY - 40);
+  gameCtx.lineTo(barnX + 14, barnY - 40);
+  gameCtx.lineTo(barnX + 25, barnY - 24);
+  gameCtx.closePath();
+  gameCtx.fill();
+  gameCtx.strokeStyle = '#FFFFFF';
+  gameCtx.lineWidth = 1.5;
+  gameCtx.stroke();
+
+  // White barn doors with X cross-bracing
+  gameCtx.fillStyle = '#FFFFFF';
+  gameCtx.fillRect(barnX - 8, barnY - 14, 16, 14);
+  gameCtx.strokeStyle = '#DC2626';
+  gameCtx.lineWidth = 1.5;
+  gameCtx.beginPath();
+  gameCtx.moveTo(barnX - 8, barnY - 14);
+  gameCtx.lineTo(barnX + 8, barnY);
+  gameCtx.moveTo(barnX + 8, barnY - 14);
+  gameCtx.lineTo(barnX - 8, barnY);
+  gameCtx.stroke();
+
+  // Puffing chimney smoke from barn
+  const smokeY = barnY - 42 - ((gameFrame * 1.5) % 20);
+  gameCtx.font = "14px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("💨", barnX + 14, smokeY);
+
+  // 3C: Silver Grain Silo next to barn
+  const siloX = barnX + 28;
+  const siloY = barnY;
+  const siloGrad = gameCtx.createLinearGradient(siloX - 7, 0, siloX + 7, 0);
+  siloGrad.addColorStop(0, '#94A3B8');
+  siloGrad.addColorStop(0.5, '#F1F5F9');
+  siloGrad.addColorStop(1, '#64748B');
+  gameCtx.fillStyle = siloGrad;
+  gameCtx.fillRect(siloX - 7, siloY - 32, 14, 32);
+  // Silo dome
+  gameCtx.beginPath();
+  gameCtx.arc(siloX, siloY - 32, 7, Math.PI, Math.PI * 2);
+  gameCtx.fill();
+
+  // Sunflowers & orchard trees along horizon
+  gameCtx.font = "18px 'Segoe UI Emoji', sans-serif";
+  gameCtx.fillText("🌳", barnX - 36, horizonY + 2);
+  gameCtx.fillText("🌻", barnX + 44, horizonY + 2);
+
+  // 4. Rolling Green Grass Meadows
   const grassGrad = gameCtx.createLinearGradient(0, horizonY, 0, h);
   grassGrad.addColorStop(0, '#22C55E');
   grassGrad.addColorStop(1, '#15803D');
@@ -1820,8 +2044,92 @@ function drawSubwaySurfersFrame() {
   // 6. Render Moving Obstacles (Anti-Cheat & Giant Formations)
   activeObstacles.forEach(ob => {
     if (ob.z > 0 && ob.z <= 1.1) {
+      // Visual Anti-Cheat Runway Alert Strip painted on roadbed in front of hurdle
+      if (ob.z >= 0.35 && ob.z <= 1.02) {
+        const pWarn = projectLanePoint(ob.lane, Math.max(0.1, ob.z - 0.08));
+        const scW = pWarn.scale;
+
+        gameCtx.save();
+        if (ob.def.type === 'low') {
+          // JUMP RUNWAY STRIP: Pulsing red/orange strip with upward chevron arrows
+          const stripW = ob.isFullRoad ? (trackBotW * 0.94 * scW) : (78 * scW);
+          gameCtx.fillStyle = 'rgba(239, 68, 68, 0.42)';
+          gameCtx.beginPath();
+          gameCtx.ellipse(pWarn.x, pWarn.y, stripW / 2, 8 * scW, 0, 0, Math.PI * 2);
+          gameCtx.fill();
+
+          gameCtx.fillStyle = '#FFFFFF';
+          gameCtx.font = `bold ${Math.floor(13 * scW)}px Vazirmatn, sans-serif`;
+          gameCtx.textAlign = 'center';
+          gameCtx.textBaseline = 'middle';
+          const pulseArrow = (gameFrame % 22 < 11) ? '▲ بپر! ▲' : '⏫ بپر! ⏫';
+          gameCtx.fillText(pulseArrow, pWarn.x, pWarn.y - 1 * scW);
+        } else if (ob.def.type === 'high') {
+          // DUCK RUNWAY STRIP: Pulsing cyan/blue strip with downward chevron arrows
+          const stripW = ob.isFullRoad ? (trackBotW * 0.94 * scW) : (78 * scW);
+          gameCtx.fillStyle = 'rgba(37, 99, 235, 0.42)';
+          gameCtx.beginPath();
+          gameCtx.ellipse(pWarn.x, pWarn.y, stripW / 2, 8 * scW, 0, 0, Math.PI * 2);
+          gameCtx.fill();
+
+          gameCtx.fillStyle = '#FFFFFF';
+          gameCtx.font = `bold ${Math.floor(13 * scW)}px Vazirmatn, sans-serif`;
+          gameCtx.textAlign = 'center';
+          gameCtx.textBaseline = 'middle';
+          const pulseArrow = (gameFrame % 22 < 11) ? '▼ بشین! ▼' : '⏬ بشین! ⏬';
+          gameCtx.fillText(pulseArrow, pWarn.x, pWarn.y - 1 * scW);
+        }
+        gameCtx.restore();
+      }
+
       // CASE 1: Continuous 3-Lane Ranch Fence (Cannot be bypassed; jumping is mandatory!)
-      if (ob.isFullRoad && ob.def.type === 'low') {
+      if (ob.isFullRoad && ob.def.isWaterCanal) {
+        // CASE 1B: Muddy Water Canal Across Full Road
+        const pL = projectLanePoint(0, ob.z);
+        const pR = projectLanePoint(2, ob.z);
+        const pC = projectLanePoint(1, ob.z);
+        const sc = pC.scale;
+        const leftEdgeX = pL.x - 38 * sc;
+        const rightEdgeX = pR.x + 38 * sc;
+
+        gameCtx.save();
+        // Mud canal water depression
+        gameCtx.fillStyle = '#1E3A8A';
+        gameCtx.beginPath();
+        gameCtx.ellipse(pC.x, pC.y, (rightEdgeX - leftEdgeX) * 0.52, 14 * sc, 0, 0, Math.PI * 2);
+        gameCtx.fill();
+
+        // Water ripples
+        gameCtx.strokeStyle = '#60A5FA';
+        gameCtx.lineWidth = 2 * sc;
+        gameCtx.beginPath();
+        gameCtx.ellipse(pC.x, pC.y, (rightEdgeX - leftEdgeX) * 0.42, 8 * sc, 0, 0, Math.PI * 2);
+        gameCtx.stroke();
+
+        // Stepping logs
+        [-1, 0, 1].forEach(l => {
+          const pl = projectLanePoint(1 + l, ob.z);
+          gameCtx.font = `${Math.floor(36 * sc)}px sans-serif`;
+          gameCtx.fillText("🪵", pl.x, pl.y + 4 * sc);
+        });
+
+        // Glowing "بپر! 👆" badge
+        const badgeW = 96 * sc;
+        const badgeH = 28 * sc;
+        gameCtx.fillStyle = '#EF4444';
+        gameCtx.beginPath();
+        if (gameCtx.roundRect) gameCtx.roundRect(pC.x - badgeW / 2, pC.y - 40 * sc, badgeW, badgeH, 12 * sc);
+        else gameCtx.rect(pC.x - badgeW / 2, pC.y - 40 * sc, badgeW, badgeH);
+        gameCtx.fill();
+        gameCtx.fillStyle = '#FFFFFF';
+        gameCtx.font = `900 ${Math.floor(13 * sc)}px Vazirmatn, sans-serif`;
+        gameCtx.textAlign = 'center';
+        gameCtx.textBaseline = 'middle';
+        gameCtx.fillText("بپر! 👆", pC.x, pC.y - 26 * sc);
+
+        gameCtx.restore();
+      }
+      else if (ob.isFullRoad && ob.def.type === 'low') {
         const pL = projectLanePoint(0, ob.z);
         const pC = projectLanePoint(1, ob.z);
         const pR = projectLanePoint(2, ob.z);

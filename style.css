@@ -1804,9 +1804,42 @@ html, body {
 }
 
 .farm-landscape.is-zoomed-habitat {
-  transform: rotateX(8deg) rotateY(0deg) scale(1.85) translateZ(35px) !important;
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform-origin 0.45s ease !important;
-  box-shadow: 0 35px 55px -10px rgba(0, 0, 0, 0.45), 0 6px 0 #15803D !important;
+  box-shadow: 0 35px 65px -10px rgba(0, 0, 0, 0.45), 0 6px 0 #15803D !important;
+  will-change: transform;
+}
+
+/* Dim & slight depth-of-field blur on other habitats when one animal is focused */
+.farm-landscape.is-zoomed-habitat .farm-habitat:not(.is-focused-animal) {
+  opacity: 0.38;
+  filter: grayscale(20%) blur(0.6px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Dramatic Spotlight on the Clicked Animal */
+.farm-habitat.is-focused-animal {
+  opacity: 1 !important;
+  filter: none !important;
+  z-index: 60 !important;
+}
+
+.farm-habitat.is-focused-animal .animal-sprite {
+  animation: focusedAnimalDance 0.75s infinite alternate ease-in-out !important;
+  filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.95)) drop-shadow(0 14px 16px rgba(0, 0, 0, 0.4)) !important;
+  transform: scale(1.22);
+}
+
+@keyframes focusedAnimalDance {
+  0% { transform: translateY(0) scale(1.18); }
+  100% { transform: translateY(-10px) scale(1.28); }
+}
+
+.farm-habitat.is-focused-animal .speech-bubble {
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateY(-10px) scale(1.2) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3) !important;
+  background: #15803D !important;
+  color: #FFFFFF !important;
 }
 
 .farm-zoom-reset-btn {
