@@ -38,6 +38,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Universal Hidden Utility */
+.hidden, [hidden] {
+  display: none !important;
+}
+
 html, body {
   font-family: var(--font-family);
   direction: rtl;

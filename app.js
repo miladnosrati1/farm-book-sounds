@@ -732,14 +732,29 @@ function initSubwaySurfersGame() {
   } catch (e) {}
   updateHUD();
 
-  // Control Listeners
-  btnPlayGame.addEventListener('click', startActiveRun);
-  btnResumeGame.addEventListener('click', resumeGame);
-  btnRestartFromPause.addEventListener('click', startActiveRun);
-  btnExitToMain.addEventListener('click', closeSubwaySurfersGame);
-  btnRestartGame.addEventListener('click', startActiveRun);
-  btnExitToFarm.addEventListener('click', closeSubwaySurfersGame);
-  btnPauseGame.addEventListener('click', pauseGame);
+  // Control Listeners with both touch and click support (debounced to prevent duplicate fires)
+  function bindTouchAndClick(elem, fn) {
+    if (!elem) return;
+    let lastTrigger = 0;
+    const handler = (e) => {
+      const now = Date.now();
+      if (now - lastTrigger < 350) return;
+      lastTrigger = now;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      fn(e);
+    };
+    elem.addEventListener('click', handler);
+    elem.addEventListener('touchend', handler);
+  }
+
+  bindTouchAndClick(btnPlayGame, startActiveRun);
+  bindTouchAndClick(btnResumeGame, resumeGame);
+  bindTouchAndClick(btnRestartFromPause, startActiveRun);
+  bindTouchAndClick(btnExitToMain, closeSubwaySurfersGame);
+  bindTouchAndClick(btnRestartGame, startActiveRun);
+  bindTouchAndClick(btnExitToFarm, closeSubwaySurfersGame);
+  bindTouchAndClick(btnPauseGame, pauseGame);
 
   // Touch Swipe & Tap Controls
   setupTouchGestures();
@@ -748,7 +763,7 @@ function initSubwaySurfersGame() {
   setupKeyboardControls();
 
   // Sound Toggle inside game
-  btnGameSound.addEventListener('click', () => {
+  bindTouchAndClick(btnGameSound, () => {
     isGameAudioMuted = !isGameAudioMuted;
     btnGameSound.textContent = isGameAudioMuted ? '🔇' : '🔊';
   });
@@ -935,8 +950,13 @@ function triggerPlayerDuck() {
 }
 
 // Open / Close Fullscreen Modal
-function openSubwaySurfersGame() {
+function openSubwaySurfersGame(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   getAudioContext();
+  gameModal.style.setProperty('display', 'flex', 'important');
   gameModal.classList.remove('hidden');
   resizeGameCanvas();
 
@@ -948,8 +968,11 @@ function openSubwaySurfersGame() {
   startAnimalName.textContent = animal.name;
   startFoodName.textContent = animal.food_name || 'غذاهای خوشمزه';
 
+  gameStartScreen.style.setProperty('display', 'flex', 'important');
   gameStartScreen.classList.remove('hidden');
+  gamePauseScreen.style.setProperty('display', 'none', 'important');
   gamePauseScreen.classList.add('hidden');
+  gameOverScreen.style.setProperty('display', 'none', 'important');
   gameOverScreen.classList.add('hidden');
   gameRunning = false;
   gamePaused = false;
@@ -958,24 +981,39 @@ function openSubwaySurfersGame() {
   drawSubwaySurfersFrame();
 }
 
-function closeSubwaySurfersGame() {
+function closeSubwaySurfersGame(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   gameRunning = false;
   gamePaused = false;
   if (gameAnimId) cancelAnimationFrame(gameAnimId);
+  gameModal.style.setProperty('display', 'none', 'important');
   gameModal.classList.add('hidden');
 }
 
-function pauseGame() {
+function pauseGame(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   if (!gameRunning || gamePaused) return;
   gamePaused = true;
   pauseFoodCount.textContent = gameFoodCollected.toString();
   pauseScoreValue.textContent = gameScore.toString();
+  gamePauseScreen.style.setProperty('display', 'flex', 'important');
   gamePauseScreen.classList.remove('hidden');
 }
 
-function resumeGame() {
+function resumeGame(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   if (!gamePaused) return;
   gamePaused = false;
+  gamePauseScreen.style.setProperty('display', 'none', 'important');
   gamePauseScreen.classList.add('hidden');
   lastFrameTime = performance.now();
   requestAnimationFrame(subwayGameLoop);
@@ -1003,10 +1041,17 @@ function resetGameEntities() {
   updateHUD();
 }
 
-function startActiveRun() {
+function startActiveRun(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   resetGameEntities();
+  gameStartScreen.style.setProperty('display', 'none', 'important');
   gameStartScreen.classList.add('hidden');
+  gamePauseScreen.style.setProperty('display', 'none', 'important');
   gamePauseScreen.classList.add('hidden');
+  gameOverScreen.style.setProperty('display', 'none', 'important');
   gameOverScreen.classList.add('hidden');
   gameRunning = true;
   gamePaused = false;
@@ -1219,6 +1264,7 @@ function triggerGameOver() {
     gameEncouragement.textContent = "خیلی تلاش قشنگی بود! دوباره امتحان کن تا رکورد بزنی! 🏃‍♂️";
   }
 
+  gameOverScreen.style.setProperty('display', 'flex', 'important');
   gameOverScreen.classList.remove('hidden');
 }
 
