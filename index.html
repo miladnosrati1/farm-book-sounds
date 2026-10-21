@@ -6,7 +6,7 @@
   <title>صدای حیوانات مزرعه | کتاب صوتی کودک</title>
   
   <!-- SEO & Social Meta -->
-  <meta name="description" content="پخش آنلاین و سریع صدای حیوانات مزرعه برای کتاب چاپی کودک با اسکن کیوآرکد (QR Code)">
+  <meta name="description" content="پخش آنلاین و بازی تعاملی صدای حیوانات مزرعه برای کتاب چاپی کودک با اسکن کیوآرکد (QR Code)">
   <meta name="theme-color" content="#4ADE80">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -21,16 +21,20 @@
 </head>
 <body>
   <!-- Background Decorations -->
-  <div class="cloud cloud-1">☁️</div>
-  <div class="cloud cloud-2">☁️</div>
-  <div class="cloud cloud-3">☀️</div>
+  <div class="sky-elements">
+    <div class="cloud cloud-1">☁️</div>
+    <div class="cloud cloud-2">☁️</div>
+    <div class="cloud cloud-3">☀️</div>
+    <div class="bird bird-1">🕊️</div>
+    <div class="bird bird-2">🕊️</div>
+  </div>
 
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="brand-badge">🚜 مزرعه شاد حیوانات 🌾</div>
       <h1 class="main-title">صدای حیوانات مزرعه</h1>
-      <p class="subtitle">همراه صوتی کتاب چاپی کودکان</p>
+      <p class="subtitle">همراه صوتی و بازی تعاملی کتاب چاپی کودکان</p>
     </header>
 
     <!-- Main Active Player Card -->
@@ -42,20 +46,37 @@
           <span>👇 روی دکمه سبز رنگ بزنید تا صدا پخش شود:</span>
         </div>
 
-        <div class="avatar-container" id="avatar-container">
-          <div class="avatar-halo"></div>
-          <div class="avatar-emoji" id="active-emoji">🌾</div>
-          <div class="sound-waves" id="sound-waves">
-            <span class="wave wave-1"></span>
-            <span class="wave wave-2"></span>
-            <span class="wave wave-3"></span>
-            <span class="wave wave-4"></span>
+        <!-- Interactive Animal Avatar with Game Callout -->
+        <div class="avatar-section">
+          <div class="avatar-container" id="avatar-container" role="button" tabindex="0" title="برای شروع بازی کلیک کن!">
+            <div class="avatar-halo"></div>
+            <div class="avatar-emoji" id="active-emoji">🌾</div>
+            <div class="sound-waves" id="sound-waves">
+              <span class="wave wave-1"></span>
+              <span class="wave wave-2"></span>
+              <span class="wave wave-3"></span>
+              <span class="wave wave-4"></span>
+            </div>
+            <div class="avatar-game-overlay">
+              <span>🎮 بازی کن!</span>
+            </div>
           </div>
+
+          <!-- Kid-Friendly Game Invitation Callout -->
+          <button class="game-callout-btn" id="btn-start-game" title="شروع بازی دایناسور مزرعه با این حیوان">
+            <span class="callout-icon">🎮</span>
+            <span class="callout-text" id="callout-text">روی عکسم بزن تا با هم بازی کنیم!</span>
+            <span class="callout-badge">پَرِش در مزرعه 🏃‍♂️</span>
+          </button>
         </div>
 
         <div class="animal-info">
           <h2 class="animal-name" id="active-name">حیوان را انتخاب کنید</h2>
-          <span class="animal-tag" id="active-tag">آماده پخش صدا</span>
+          <span class="animal-sound-text" id="active-sound-text">قُد قُد قُدا!</span>
+          <div class="animal-tags-row">
+            <span class="animal-tag" id="active-tag">آماده پخش صدا</span>
+            <span class="animal-habitat-tag" id="active-habitat-tag">🏡 در مزرعه</span>
+          </div>
         </div>
 
         <!-- Audio Player Controls -->
@@ -87,20 +108,171 @@
         <!-- Direct download or share option for parents -->
         <div class="audio-extra-links">
           <a id="direct-audio-link" href="#" target="_blank" download class="extra-link">
-            📥 دانلود مستقیم فایل صوتی
+            📥 دانلود مستقیم فایل صوتی این حیوان
           </a>
         </div>
       </div>
     </main>
 
-    <!-- Animal Catalog Grid -->
-    <section class="catalog-section">
+    <!-- Interactive Farm Scene & Catalog Section -->
+    <section class="farm-section">
       <div class="section-header">
-        <h3 class="section-title">فهرست همه حیوانات مزرعه</h3>
-        <p class="section-desc">برای شنیدن صدای هر حیوان، روی کارت آن بزنید:</p>
+        <div class="title-with-badge">
+          <h3 class="section-title">گشت‌وگذار در مزرعه شاد حیوانات 🚜</h3>
+          <span class="spotlight-hint">👆 روی هر حیوان بزن تا صداشو بشنوی</span>
+        </div>
+
+        <!-- View Switcher Tabs -->
+        <div class="view-switch-tabs">
+          <button id="tab-farm-view" class="tab-btn active" title="نمای منظره مزرعه">
+            🏡 مزرعه شاد
+          </button>
+          <button id="tab-grid-view" class="tab-btn" title="نمای فهرست کارتی">
+            📋 فهرست ساده
+          </button>
+        </div>
       </div>
 
-      <div class="animals-grid" id="animals-grid">
+      <!-- 1. Interactive Panoramic Farm Landscape -->
+      <div class="farm-landscape-container" id="farm-view">
+        <div class="farm-landscape" id="farm-landscape">
+          
+          <!-- Farm scenery elements -->
+          <div class="scenery-sky"></div>
+          <div class="scenery-hills"></div>
+          
+          <!-- Windmill -->
+          <div class="scenery-windmill" title="آسیاب بادی مزرعه">
+            <div class="windmill-body">🛖</div>
+            <div class="windmill-blades">☸️</div>
+          </div>
+
+          <!-- Red Barn -->
+          <div class="scenery-barn" title="انبار و اصطبل مزرعه">
+            <div class="barn-icon">🏡</div>
+            <div class="barn-sign">انبار مزرعه</div>
+          </div>
+
+          <!-- Trees & Nature -->
+          <div class="scenery-tree tree-1">🌳</div>
+          <div class="scenery-tree tree-2">🌲</div>
+          <div class="scenery-tree tree-3">🍎</div>
+          <div class="scenery-butterfly butterfly-1">🦋</div>
+          <div class="scenery-butterfly butterfly-2">🦋</div>
+
+          <!-- Animal 1: Hen (Near Chicken Coop) -->
+          <div class="farm-habitat habitat-hen" data-animal-id="hen" id="farm-animal-hen" role="button" tabindex="0">
+            <div class="habitat-prop coop-prop">🛖</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">قُد قُد قُدا!</div>
+              <div class="animal-sprite sprite-hen">🐔</div>
+              <div class="animal-label">مرغ</div>
+              <div class="active-beacon"></div>
+            </div>
+            <div class="nest-prop">🪹🥚</div>
+          </div>
+
+          <!-- Animal 2: Cow (Lush Pasture) -->
+          <div class="farm-habitat habitat-cow" data-animal-id="cow" id="farm-animal-cow" role="button" tabindex="0">
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">مااااا!</div>
+              <div class="animal-sprite sprite-cow">🐄</div>
+              <div class="animal-label">گاو</div>
+              <div class="active-beacon"></div>
+            </div>
+            <div class="grass-patch">🍀🌼🍀</div>
+          </div>
+
+          <!-- Animal 3: Sheep (Grassy Hill) -->
+          <div class="farm-habitat habitat-sheep" data-animal-id="sheep" id="farm-animal-sheep" role="button" tabindex="0">
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">بَعععع!</div>
+              <div class="animal-sprite sprite-sheep">🐑</div>
+              <div class="animal-label">گوسفند</div>
+              <div class="active-beacon"></div>
+            </div>
+            <div class="flower-patch">🌸🌿</div>
+          </div>
+
+          <!-- Animal 4 & 5: Pond Area (Duck & Goose) -->
+          <div class="farm-pond-zone">
+            <div class="pond-water">
+              <div class="water-waves">🌊</div>
+              <div class="water-lily lily-1">🪷</div>
+              <div class="water-lily lily-2">🌿</div>
+              
+              <!-- Duck inside pond -->
+              <div class="farm-habitat habitat-duck" data-animal-id="duck" id="farm-animal-duck" role="button" tabindex="0">
+                <div class="habitat-animal-wrap">
+                  <div class="speech-bubble">کواک کواک!</div>
+                  <div class="animal-sprite sprite-duck">🦆</div>
+                  <div class="animal-label">اردک</div>
+                  <div class="active-beacon"></div>
+                </div>
+              </div>
+
+              <!-- Goose by pond edge -->
+              <div class="farm-habitat habitat-goose" data-animal-id="goose" id="farm-animal-goose" role="button" tabindex="0">
+                <div class="habitat-animal-wrap">
+                  <div class="speech-bubble">غا غا غار!</div>
+                  <div class="animal-sprite sprite-goose">🪿</div>
+                  <div class="animal-label">غاز</div>
+                  <div class="active-beacon"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Animal 6: Donkey (Hay Cart & Windmill) -->
+          <div class="farm-habitat habitat-donkey" data-animal-id="donkey" id="farm-animal-donkey" role="button" tabindex="0">
+            <div class="hay-wagon">🧺🌾</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">عَررر عَررر!</div>
+              <div class="animal-sprite sprite-donkey">🫏</div>
+              <div class="animal-label">الاغ</div>
+              <div class="active-beacon"></div>
+            </div>
+          </div>
+
+          <!-- Animal 7: Dog (Farm Front Gate) -->
+          <div class="farm-habitat habitat-dog" data-animal-id="dog" id="farm-animal-dog" role="button" tabindex="0">
+            <div class="dog-house">🐶🪵</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">هاپ هاپ!</div>
+              <div class="animal-sprite sprite-dog">🐕</div>
+              <div class="animal-label">سگ گله</div>
+              <div class="active-beacon"></div>
+            </div>
+            <div class="fence-gate">🚪</div>
+          </div>
+
+          <!-- Animal 8: Horse (Fenced Paddock) -->
+          <div class="farm-habitat habitat-horse" data-animal-id="horse" id="farm-animal-horse" role="button" tabindex="0">
+            <div class="wooden-fence">🪵🪵🪵</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">شِیهه اسب!</div>
+              <div class="animal-sprite sprite-horse">🐎</div>
+              <div class="animal-label">اسب</div>
+              <div class="active-beacon"></div>
+            </div>
+          </div>
+
+          <!-- Animal 9: Goat (Rocky Mound) -->
+          <div class="farm-habitat habitat-goat" data-animal-id="goat" id="farm-animal-goat" role="button" tabindex="0">
+            <div class="rock-prop">🪨🪨</div>
+            <div class="habitat-animal-wrap">
+              <div class="speech-bubble">مَعععع!</div>
+              <div class="animal-sprite sprite-goat">🐐</div>
+              <div class="animal-label">بز</div>
+              <div class="active-beacon"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 2. Fallback / Alternative Grid View (Hidden by default, toggleable) -->
+      <div class="animals-grid hidden" id="grid-view">
         <!-- Rendered dynamically via app.js -->
       </div>
     </section>
@@ -110,21 +282,111 @@
       <details class="guide-box">
         <summary>📖 راهنمای کتاب چاپی و کیوآرکدها (ویژه والدین و مربیان)</summary>
         <div class="guide-content">
-          <p>این سامانه صوتی به عنوان مکمل کتاب چاپی کودک طراحی شده است. هر صفحه از کتاب شامل یک کیوآرکد اختصاصی است که با دوربین گوشی همراه یا تبلت اسکن می‌شود و بلافاصله صدای باکیفیت و بدون تبلیغ حیوان را پخش می‌کند.</p>
+          <p>این سامانه صوتی و بازی تعاملی به عنوان مکمل اختصاصی کتاب چاپی کودک طراحی شده است. هر صفحه کتاب دارای کیوآرکد مجزاست که با دوربین گوشی اسکن می‌شود:</p>
           <ul>
-            <li>بدون نیاز به نصب هیچ‌گونه اپلیکیشن</li>
-            <li>کاملاً رایگان، سبک و سازگار با اینترنت همراه</li>
-            <li>کیفیت چاپی کیوآرکدها به صورت ۳۰۰DPI و وکتور SVG</li>
+            <li><strong>پخش سریع صدا:</strong> بلافاصله با اسکن کد، صدای طبیعی حیوان بدون تبلیغ پخش می‌شود.</li>
+            <li><strong>بازی پرش مزرعه (Dino Runner):</strong> با کلیک روی عکس حیوان، بازی دونده شاد مزرعه با شخصیت همان حیوان اجرا می‌شود.</li>
+            <li><strong>گشت‌وگذار در مزرعه:</strong> کودک می‌تواند در مزرعه آزادانه بگردد، با لمس حیوانات صدای هر کدام را کشف کند و جایگاه طبیعی آن‌ها را یاد بگیرد.</li>
           </ul>
         </div>
       </details>
       <div class="footer-credit">
-        طراحی و توسعه برای کتاب کودک • نسخه گیتهاب پیجز
+        طراحی و توسعه برای کتاب کودک • نسخه تعاملی مزرعه شاد
       </div>
     </footer>
   </div>
 
-  <!-- Audio Element -->
+  <!-- =========================================================================
+       FARM RUNNER MINI-GAME MODAL (Google Dino Style)
+       ========================================================================= -->
+  <div class="game-modal-backdrop hidden" id="game-modal" role="dialog" aria-modal="true" aria-label="بازی پرش مزرعه">
+    <div class="game-modal-container">
+      
+      <!-- Game Top Bar -->
+      <div class="game-top-bar">
+        <div class="game-character-badge">
+          <span class="game-char-emoji" id="game-player-emoji">🐔</span>
+          <span class="game-char-name" id="game-player-name">مرغ قهرمان</span>
+        </div>
+
+        <div class="game-scores-wrapper">
+          <div class="score-pill current-score">
+            <span>🌟 امتیاز: </span>
+            <strong id="game-score">۰</strong>
+          </div>
+          <div class="score-pill best-score">
+            <span>🏆 رکورد: </span>
+            <strong id="game-high-score">۰</strong>
+          </div>
+        </div>
+
+        <div class="game-actions">
+          <button id="btn-game-sound" class="game-btn-icon" title="قطع / وصل صدای بازی" aria-label="صدا">
+            🔊
+          </button>
+          <button id="btn-close-game" class="game-btn-icon btn-close" title="خروج از بازی" aria-label="بستن">
+            ✖️
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Canvas Viewport -->
+      <div class="game-canvas-wrapper" id="game-canvas-wrapper">
+        <canvas id="game-canvas" width="800" height="340"></canvas>
+        
+        <!-- Touch Jump Helper for Small Fingers -->
+        <button id="btn-touch-jump" class="touch-jump-btn" aria-label="پرش">
+          <span>🚀 بپَر!</span>
+        </button>
+
+        <!-- Ready / Start Screen Overlay -->
+        <div class="game-overlay-screen" id="game-start-screen">
+          <div class="overlay-card">
+            <div class="overlay-mascot" id="start-screen-emoji">🐔</div>
+            <h3 class="overlay-title">بازی پرش در مزرعه!</h3>
+            <p class="overlay-desc">از روی نرده‌ها، بوته‌ها و دسته‌های کاه بپر و ستاره جمع کن!</p>
+            <div class="control-hints">
+              <span>📱 لمس صفحه برای پرش</span>
+              <span>⌨️ کلید Space یا فلش بالا</span>
+            </div>
+            <button id="btn-play-game" class="btn-start-play">
+              🚀 شروع بازی شاد
+            </button>
+          </div>
+        </div>
+
+        <!-- Game Over Screen Overlay -->
+        <div class="game-overlay-screen hidden" id="game-over-screen">
+          <div class="overlay-card game-over-card">
+            <div class="celebrate-emoji">🎉</div>
+            <h3 class="overlay-title" id="game-over-title">آفرین قهرمان مزرعه!</h3>
+            <p class="game-result-text">
+              امتیاز شما: <strong id="final-score" class="highlight-score">۰</strong> ستاره 🌟
+            </p>
+            <p class="game-encouragement" id="game-encouragement">خیلی عالی دویدی و پریدی!</p>
+            
+            <div class="game-over-buttons">
+              <button id="btn-restart-game" class="btn-start-play btn-restart">
+                🔄 دوباره بازی کنیم!
+              </button>
+              <button id="btn-exit-to-farm" class="btn-secondary-game">
+                🏡 بازگشت به مزرعه
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      
+      <!-- Game Bottom Help -->
+      <div class="game-footer-hint">
+        💡 روی صفحه گوشی ضربه بزن تا بپری! ستاره‌ها امتیاز اضافه دارن ⭐
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Audio Element for Animal Real Sounds -->
   <audio id="main-audio" preload="metadata"></audio>
 
   <!-- Confetti Canvas -->

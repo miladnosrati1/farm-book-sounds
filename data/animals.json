@@ -3,54 +3,81 @@
     "id": "hen",
     "name": "مرغ",
     "emoji": "🐔",
-    "audio": "audio/hen.mp3"
+    "audio": "audio/hen.mp3",
+    "sound_text": "قُد قُد قُدا!",
+    "habitat": "مرغ‌دانی و لانه کاه",
+    "action_hint": "در حال دانه خوردن 🌾"
   },
   {
     "id": "cow",
     "name": "گاو",
     "emoji": "🐄",
-    "audio": "audio/cow.mp3"
+    "audio": "audio/cow.mp3",
+    "sound_text": "ماااااا!",
+    "habitat": "چمن‌زار سرسبز",
+    "action_hint": "در حال چریدن علف 🍀"
   },
   {
     "id": "sheep",
     "name": "گوسفند",
     "emoji": "🐑",
-    "audio": "audio/sheep.mp3"
+    "audio": "audio/sheep.mp3",
+    "sound_text": "بَععععع!",
+    "habitat": "تپه علفی نرم",
+    "action_hint": "در حال دویدن در دشت 🌼"
   },
   {
     "id": "goose",
     "name": "غاز",
     "emoji": "🪿",
-    "audio": "audio/goose.mp3"
+    "audio": "audio/goose.mp3",
+    "sound_text": "غا غا غار!",
+    "habitat": "کنار برکه آب",
+    "action_hint": "در حال بال زدن 💧"
   },
   {
     "id": "duck",
     "name": "اردک",
     "emoji": "🦆",
-    "audio": "audio/duck.mp3"
+    "audio": "audio/duck.mp3",
+    "sound_text": "کواک کواک!",
+    "habitat": "داخل برکه نیلوفر",
+    "action_hint": "در حال شنا روی آب 🪷"
   },
   {
     "id": "donkey",
     "name": "الاغ",
     "emoji": "🫏",
-    "audio": "audio/donkey.mp3"
+    "audio": "audio/donkey.mp3",
+    "sound_text": "عَررر عَررر!",
+    "habitat": "کنار آسیاب و گاری کاه",
+    "action_hint": "در حال خوردن یونجه 🧺"
   },
   {
     "id": "dog",
     "name": "سگ گله",
     "emoji": "🐕",
-    "audio": "audio/dog.mp3"
+    "audio": "audio/dog.mp3",
+    "sound_text": "هاپ هاپ!",
+    "habitat": "درگاه چوبی مزرعه",
+    "action_hint": "در حال نگهبانی مزرعه 🪵"
   },
   {
     "id": "horse",
     "name": "اسب",
     "emoji": "🐎",
-    "audio": "audio/horse.mp3"
+    "audio": "audio/horse.mp3",
+    "sound_text": "هیهااااء!",
+    "habitat": "محوطه اصطبل و نرده‌ها",
+    "action_hint": "در حال تاختن شاد 🏇"
   },
   {
     "id": "goat",
     "name": "بز",
     "emoji": "🐐",
-    "audio": "audio/goat.mp3"
+    "audio": "audio/goat.mp3",
+    "sound_text": "مَععععع!",
+    "habitat": "صخره سنگی کوچک",
+    "action_hint": "در حال پریدن روی سنگ‌ها 🪨"
   }
 ]

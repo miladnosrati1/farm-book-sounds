@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Farm Book Sounds - Child-Friendly Cheerful Theme
+   Farm Book Sounds & Farm Runner Game - Child-Friendly Cheerful Theme
    Mobile-First, Responsive, RTL Persian
    ========================================================================== */
 
@@ -12,8 +12,10 @@
   --accent-sun: #F59E0B;
   --accent-sky: #0EA5E9;
   --accent-pink: #EC4899;
+  --accent-purple: #8B5CF6;
+  --accent-gold: #EAB308;
 
-  --bg-gradient-start: #E0F2FE;
+  --bg-gradient-start: #BAE6FD;
   --bg-gradient-end: #DCFCE7;
 
   --card-bg: #FFFFFF;
@@ -48,23 +50,44 @@ html, body {
   -webkit-user-select: none;
 }
 
-/* Background Animated Clouds */
-.cloud {
+/* Background Animated Sky Elements */
+.sky-elements {
   position: fixed;
-  font-size: 3rem;
-  z-index: 0;
+  inset: 0;
   pointer-events: none;
-  opacity: 0.55;
-  animation: floatClouds 24s linear infinite;
+  z-index: 0;
+  overflow: hidden;
 }
 
-.cloud-1 { top: 3%; left: -60px; animation-duration: 32s; }
-.cloud-2 { top: 12%; left: -100px; animation-duration: 26s; animation-delay: 8s; font-size: 2.2rem; }
-.cloud-3 { top: 2%; right: 4%; font-size: 3.5rem; opacity: 0.9; animation: sunSpin 20s linear infinite; }
+.cloud {
+  position: absolute;
+  font-size: 3rem;
+  opacity: 0.65;
+  animation: floatClouds 28s linear infinite;
+}
+
+.cloud-1 { top: 2%; left: -60px; animation-duration: 36s; }
+.cloud-2 { top: 10%; left: -100px; animation-duration: 28s; animation-delay: 10s; font-size: 2.2rem; }
+.cloud-3 { top: 1%; right: 4%; font-size: 3.8rem; opacity: 0.95; animation: sunSpin 24s linear infinite; }
+
+.bird {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.5;
+  animation: birdFly 18s linear infinite;
+}
+.bird-1 { top: 6%; left: -40px; animation-duration: 22s; }
+.bird-2 { top: 14%; left: -80px; animation-duration: 26s; animation-delay: 7s; }
 
 @keyframes floatClouds {
   0% { transform: translateX(0vw); }
   100% { transform: translateX(120vw); }
+}
+
+@keyframes birdFly {
+  0% { transform: translateX(0vw) translateY(0); }
+  50% { transform: translateX(60vw) translateY(-15px); }
+  100% { transform: translateX(120vw) translateY(0); }
 }
 
 @keyframes sunSpin {
@@ -76,9 +99,9 @@ html, body {
 .app-container {
   position: relative;
   z-index: 1;
-  max-width: 540px;
+  max-width: 580px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -87,25 +110,25 @@ html, body {
 /* Header */
 .app-header {
   text-align: center;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .brand-badge {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(8px);
   color: #065F46;
   font-size: 0.88rem;
-  font-weight: 700;
-  padding: 6px 16px;
+  font-weight: 800;
+  padding: 6px 18px;
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-bottom: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .main-title {
-  font-size: 1.85rem;
+  font-size: 1.95rem;
   font-weight: 900;
   color: #1E293B;
   letter-spacing: -0.5px;
@@ -114,8 +137,8 @@ html, body {
 
 .subtitle {
   font-size: 0.95rem;
-  color: var(--text-muted);
-  font-weight: 500;
+  color: #475569;
+  font-weight: 600;
 }
 
 /* Active Player Card */
@@ -128,7 +151,7 @@ html, body {
   border-radius: var(--radius-xl);
   box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.12),
               0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-  padding: 30px 22px 24px;
+  padding: 26px 20px 22px;
   text-align: center;
   position: relative;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
@@ -144,9 +167,9 @@ html, body {
   color: #92400E;
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   border: 1px solid #FCD34D;
   animation: pulseNotice 1.8s infinite ease-in-out;
 }
@@ -160,47 +183,86 @@ html, body {
   50% { transform: scale(1.02); }
 }
 
-/* Avatar / Mascot */
+/* Avatar Section & Game Callout */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
 .avatar-container {
   position: relative;
   width: 140px;
   height: 140px;
-  margin: 0 auto 16px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.avatar-container:hover {
+  transform: scale(1.06);
+}
+
+.avatar-container:active {
+  transform: scale(0.95);
 }
 
 .avatar-halo {
   position: absolute;
-  inset: -10px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+  inset: -12px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, rgba(245, 158, 11, 0.2) 50%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   z-index: 0;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  animation: haloPulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes haloPulse {
+  0% { transform: scale(0.95); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
 }
 
 .avatar-emoji {
   position: relative;
   z-index: 1;
-  font-size: 5.5rem;
+  font-size: 5.6rem;
   line-height: 1;
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.16));
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
 }
 
+.avatar-game-overlay {
+  position: absolute;
+  bottom: -6px;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+  border: 2px solid #FFFFFF;
+  letter-spacing: 0.2px;
+}
+
 /* Bouncy animation when playing */
 .is-playing .avatar-emoji {
-  animation: animalBounce 0.9s infinite alternate ease-in-out;
+  animation: animalBounce 0.85s infinite alternate ease-in-out;
 }
 
 @keyframes animalBounce {
   0% { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-12px) scale(1.08) rotate(3deg); }
+  100% { transform: translateY(-14px) scale(1.1) rotate(4deg); }
 }
 
-/* Sound Wave Circles around Avatar */
+/* Sound Wave Circles */
 .sound-waves {
   position: absolute;
   inset: 0;
@@ -236,7 +298,7 @@ html, body {
     width: 110px;
     height: 110px;
     opacity: 0.9;
-    border-color: rgba(16, 185, 129, 0.6);
+    border-color: rgba(16, 185, 129, 0.7);
   }
   100% {
     width: 210px;
@@ -246,24 +308,90 @@ html, body {
   }
 }
 
+/* Kid-Friendly Game Callout Button */
+.game-callout-btn {
+  background: linear-gradient(135deg, #FEF08A 0%, #FDE047 50%, #FACC15 100%);
+  border: 2px solid #EAB308;
+  color: #713F12;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(234, 179, 8, 0.35);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  animation: calloutBob 2.2s infinite ease-in-out;
+}
+
+.game-callout-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 22px rgba(234, 179, 8, 0.45);
+}
+
+.game-callout-btn:active {
+  transform: scale(0.96);
+}
+
+.callout-icon {
+  font-size: 1.25rem;
+}
+
+.callout-badge {
+  background: #CA8A04;
+  color: #FFFFFF;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+@keyframes calloutBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 /* Animal Details */
 .animal-info {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .animal-name {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 2.1rem;
+  font-weight: 900;
   color: #0F172A;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
-.animal-tag {
+.animal-sound-text {
+  display: inline-block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #D97706;
+  background: #FEF3C7;
+  padding: 3px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+  border: 1px solid #FDE68A;
+}
+
+.animal-tags-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.animal-tag, .animal-habitat-tag {
   display: inline-block;
   background: #F1F5F9;
   color: #475569;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 700;
   padding: 4px 12px;
   border-radius: var(--radius-full);
 }
@@ -271,6 +399,11 @@ html, body {
 .is-playing .animal-tag {
   background: var(--primary-light);
   color: #065F46;
+}
+
+.animal-habitat-tag {
+  background: #EFF6FF;
+  color: #1D4ED8;
 }
 
 /* Progress Bar */
@@ -296,11 +429,11 @@ html, body {
 .time-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
   padding: 0 4px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 /* Control Buttons */
@@ -364,8 +497,8 @@ html, body {
 }
 
 .audio-extra-links {
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: 16px;
+  padding-top: 12px;
   border-top: 1px dashed #E2E8F0;
 }
 
@@ -382,38 +515,524 @@ html, body {
   text-decoration: underline;
 }
 
-/* Catalog Section */
-.catalog-section {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
+/* ==========================================================================
+   INTERACTIVE FARM LANDSCAPE SCENE
+   ========================================================================== */
+.farm-section {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
   border-radius: var(--radius-xl);
-  padding: 24px 18px;
+  padding: 22px 16px 20px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 16px;
+}
+
+.title-with-badge {
   text-align: right;
 }
 
 .section-title {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 900;
   color: #1E293B;
   margin-bottom: 2px;
 }
 
-.section-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
+.spotlight-hint {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #15803D;
+  background: #DCFCE7;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  display: inline-block;
 }
 
-/* 9 Animals Grid */
+.view-switch-tabs {
+  display: flex;
+  gap: 8px;
+  background: #E2E8F0;
+  padding: 4px;
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: #FFFFFF;
+  color: #065F46;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Farm Panoramic Container */
+.farm-landscape-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 3px solid #86EFAC;
+  box-shadow: 0 10px 24px -6px rgba(22, 101, 52, 0.2);
+  background: #E0F2FE;
+  -webkit-overflow-scrolling: touch;
+}
+
+.farm-landscape {
+  position: relative;
+  width: 100%;
+  min-width: 520px;
+  height: 480px;
+  background: linear-gradient(180deg, #BAE6FD 0%, #BBF7D0 35%, #86EFAC 70%, #4ADE80 100%);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Scenery Decor */
+.scenery-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.scenery-hills {
+  position: absolute;
+  top: 80px;
+  left: -20px;
+  right: -20px;
+  height: 80px;
+  background: radial-gradient(ellipse 60% 70% at 50% 100%, #86EFAC 0%, transparent 100%);
+  opacity: 0.8;
+}
+
+.scenery-windmill {
+  position: absolute;
+  top: 36px;
+  left: 35px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.9;
+}
+
+.windmill-body {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.windmill-blades {
+  position: absolute;
+  top: -8px;
+  font-size: 2rem;
+  animation: windmillTurn 8s linear infinite;
+}
+
+@keyframes windmillTurn {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.scenery-barn {
+  position: absolute;
+  top: 28px;
+  right: 30px;
+  text-align: center;
+}
+
+.barn-icon {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.barn-sign {
+  background: #991B1B;
+  color: #FEF2F2;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.scenery-tree {
+  position: absolute;
+  font-size: 2.2rem;
+  line-height: 1;
+  pointer-events: none;
+}
+.tree-1 { top: 90px; right: 120px; }
+.tree-2 { top: 80px; left: 130px; font-size: 1.8rem; }
+.tree-3 { top: 120px; left: 45%; font-size: 1.5rem; }
+
+.scenery-butterfly {
+  position: absolute;
+  font-size: 1.3rem;
+  animation: butterflyFloat 6s ease-in-out infinite alternate;
+}
+.butterfly-1 { top: 160px; right: 80px; animation-duration: 5s; }
+.butterfly-2 { top: 220px; left: 160px; animation-duration: 7s; }
+
+@keyframes butterflyFloat {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(15px, -18px) rotate(10deg); }
+  100% { transform: translate(-10px, -30px) rotate(-8deg); }
+}
+
+/* ==========================================================================
+   FARM HABITATS & ANIMAL SPRITES
+   ========================================================================== */
+.farm-habitat {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+}
+
+.farm-habitat:hover {
+  transform: translateY(-6px) scale(1.1);
+  z-index: 10;
+}
+
+.farm-habitat:active {
+  transform: scale(0.92);
+}
+
+.habitat-animal-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.animal-sprite {
+  font-size: 3.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+  transition: transform 0.25s ease;
+  will-change: transform;
+}
+
+.animal-label {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1E293B;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.speech-bubble {
+  position: absolute;
+  top: -26px;
+  background: #FEF08A;
+  color: #854D0E;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #FACC15;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.85;
+  animation: bubbleBob 2s infinite ease-in-out;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px 4px 0;
+  border-style: solid;
+  border-color: #FEF08A transparent;
+  display: block;
+  width: 0;
+}
+
+@keyframes bubbleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Spotlight Beacon on Active Animal */
+.active-beacon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 74px;
+  height: 74px;
+  border: 3px solid #F59E0B;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.farm-habitat.is-active-habitat .active-beacon {
+  opacity: 1;
+  animation: beaconPulse 1.6s infinite ease-out;
+}
+
+.farm-habitat.is-active-habitat .animal-label {
+  background: #10B981;
+  color: #FFFFFF;
+  border-color: #059669;
+}
+
+.farm-habitat.is-active-habitat .speech-bubble {
+  background: #22C55E;
+  color: #FFFFFF;
+  border-color: #16A34A;
+  opacity: 1;
+}
+
+.farm-habitat.is-active-habitat .speech-bubble::after {
+  border-color: #22C55E transparent;
+}
+
+@keyframes beaconPulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* Specific Habitat Positions in the Farm Scene */
+/* 1. Hen (Chicken coop, top right) */
+.habitat-hen {
+  top: 105px;
+  right: 28px;
+}
+.coop-prop {
+  font-size: 1.6rem;
+  position: absolute;
+  top: -16px;
+  right: -14px;
+}
+.nest-prop {
+  font-size: 0.9rem;
+  margin-top: -4px;
+}
+.sprite-hen {
+  animation: henPeck 2.5s infinite ease-in-out;
+}
+@keyframes henPeck {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(3px) rotate(-8deg); }
+  40% { transform: translateY(0) rotate(0deg); }
+  60% { transform: translateY(-4px) rotate(6deg); }
+}
+
+/* 2. Cow (Middle right meadow) */
+.habitat-cow {
+  top: 220px;
+  right: 70px;
+}
+.grass-patch {
+  font-size: 0.8rem;
+  margin-top: -2px;
+}
+.sprite-cow {
+  animation: cowSway 3.5s infinite ease-in-out;
+}
+@keyframes cowSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-3deg); }
+}
+
+/* 3. Sheep (Top center hill) */
+.habitat-sheep {
+  top: 130px;
+  left: 48%;
+  transform: translateX(-50%);
+}
+.flower-patch {
+  font-size: 0.8rem;
+}
+.sprite-sheep {
+  animation: sheepBounce 2s infinite ease-in-out;
+}
+@keyframes sheepBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* 4 & 5: Pond Area (Duck & Goose, Bottom Right/Center) */
+.farm-pond-zone {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  width: 230px;
+  height: 140px;
+}
+
+.pond-water {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #38BDF8 0%, #0284C7 80%, #0369A1 100%);
+  border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+  box-shadow: inset 0 6px 14px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(2, 132, 199, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px;
+  border: 3px solid #7DD3FC;
+}
+
+.water-waves {
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  font-size: 1.2rem;
+  opacity: 0.5;
+  animation: waterRipple 4s infinite linear;
+}
+
+.water-lily {
+  position: absolute;
+  font-size: 1.1rem;
+}
+.lily-1 { bottom: 12px; left: 16px; }
+.lily-2 { top: 12px; right: 18px; }
+
+.habitat-duck {
+  position: relative;
+  top: 4px;
+}
+.sprite-duck {
+  animation: duckFloat 2.2s infinite ease-in-out;
+}
+@keyframes duckFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+
+.habitat-goose {
+  position: relative;
+  top: -8px;
+}
+.sprite-goose {
+  animation: gooseFlap 2.8s infinite ease-in-out;
+}
+@keyframes gooseFlap {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.08) translateY(-5px); }
+}
+
+/* 6. Donkey (Middle Left near windmill & hay cart) */
+.habitat-donkey {
+  top: 135px;
+  left: 55px;
+}
+.hay-wagon {
+  font-size: 1.1rem;
+  margin-bottom: -4px;
+}
+.sprite-donkey {
+  animation: donkeyNod 3s infinite ease-in-out;
+}
+@keyframes donkeyNod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg); }
+}
+
+/* 7. Dog (Bottom Left front gate) */
+.habitat-dog {
+  bottom: 24px;
+  left: 30px;
+}
+.dog-house {
+  font-size: 1.1rem;
+  margin-bottom: -4px;
+}
+.fence-gate {
+  font-size: 0.9rem;
+  margin-top: -2px;
+}
+.sprite-dog {
+  animation: dogWag 1.8s infinite ease-in-out;
+}
+@keyframes dogWag {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(4deg); }
+  75% { transform: translateY(-3px) rotate(-4deg); }
+}
+
+/* 8. Horse (Middle Left-Center paddock) */
+.habitat-horse {
+  top: 240px;
+  left: 175px;
+}
+.wooden-fence {
+  font-size: 0.9rem;
+  margin-bottom: -6px;
+}
+.sprite-horse {
+  animation: horsePrance 2.4s infinite ease-in-out;
+}
+@keyframes horsePrance {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(-4deg); }
+}
+
+/* 9. Goat (Center rocky knoll) */
+.habitat-goat {
+  top: 320px;
+  left: 45%;
+  transform: translateX(-50%);
+}
+.rock-prop {
+  font-size: 1rem;
+  margin-bottom: -4px;
+}
+.sprite-goat {
+  animation: goatHop 2.6s infinite ease-in-out;
+}
+@keyframes goatHop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+/* ==========================================================================
+   SIMPLE GRID VIEW (Alternative view)
+   ========================================================================== */
 .animals-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.animals-grid.hidden, .farm-landscape-container.hidden {
+  display: none !important;
 }
 
 .animal-card {
@@ -472,6 +1091,303 @@ html, body {
   border-radius: var(--radius-full);
 }
 
+/* ==========================================================================
+   FARM RUNNER MINI-GAME MODAL (Google Dino Style)
+   ========================================================================== */
+.game-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.game-modal-backdrop.hidden {
+  display: none !important;
+}
+
+.game-modal-container {
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 620px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 3px solid #86EFAC;
+  animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Game Top Bar */
+.game-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #F8FAFC;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.game-character-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-char-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.game-char-name {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.game-scores-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.score-pill {
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.current-score {
+  background: #FEF08A;
+  color: #854D0E;
+  border: 1px solid #FACC15;
+}
+
+.best-score {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.game-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.game-btn-icon {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.game-btn-icon:hover {
+  background: #F1F5F9;
+  transform: scale(1.08);
+}
+
+.game-btn-icon.btn-close:hover {
+  background: #FEE2E2;
+  border-color: #F87171;
+}
+
+/* Canvas Viewport */
+.game-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  background: #E0F2FE;
+  touch-action: none;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 800 / 340;
+  cursor: pointer;
+}
+
+/* Touch Jump Button for Mobile */
+.touch-jump-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  border: 3px solid #FFFFFF;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 900;
+  padding: 10px 32px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.45);
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+.touch-jump-btn:active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+/* Overlays (Start & Game Over) */
+.game-overlay-screen {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 20;
+}
+
+.game-overlay-screen.hidden {
+  display: none !important;
+}
+
+.overlay-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  padding: 24px 20px;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+  border: 2px solid #E2E8F0;
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.overlay-mascot, .celebrate-emoji {
+  font-size: 4rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.overlay-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #0F172A;
+  margin-bottom: 6px;
+}
+
+.overlay-desc {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.control-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #0369A1;
+  background: #E0F2FE;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.btn-start-play {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  border: none;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 900;
+  padding: 14px 32px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  width: 100%;
+}
+
+.btn-start-play:active {
+  transform: scale(0.95);
+}
+
+/* Game Over Card */
+.game-result-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 4px;
+}
+
+.highlight-score {
+  font-size: 1.6rem;
+  color: #D97706;
+}
+
+.game-encouragement {
+  font-size: 0.92rem;
+  color: #15803D;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.game-over-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-restart {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.4);
+}
+
+.btn-secondary-game {
+  background: #F1F5F9;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-secondary-game:hover {
+  background: #E2E8F0;
+}
+
+.game-footer-hint {
+  padding: 10px 16px;
+  background: #F8FAFC;
+  font-size: 0.8rem;
+  color: #64748B;
+  text-align: center;
+  font-weight: 600;
+  border-top: 1px solid #E2E8F0;
+}
+
 /* Footer & Guide Box */
 .app-footer {
   text-align: center;
@@ -490,7 +1406,7 @@ html, body {
 }
 
 .guide-box summary {
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   color: #0F172A;
   outline: none;
@@ -509,8 +1425,9 @@ html, body {
 }
 
 .footer-credit {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #64748B;
+  font-weight: 600;
 }
 
 /* Fullscreen Confetti Canvas */
@@ -524,29 +1441,38 @@ html, body {
 }
 
 /* Responsive adjustments */
-@media (max-width: 400px) {
+@media (max-width: 440px) {
   .app-container {
-    padding: 16px 12px 30px;
+    padding: 14px 10px 30px;
   }
-  .animals-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+  .main-title {
+    font-size: 1.7rem;
   }
-  .card-emoji {
-    font-size: 2.3rem;
-  }
-  .card-title {
-    font-size: 0.88rem;
-  }
-  .btn-pill {
-    padding: 14px 28px;
-    font-size: 1.1rem;
+  .card {
+    padding: 20px 14px 18px;
   }
   .avatar-container {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
   }
   .avatar-emoji {
-    font-size: 4.5rem;
+    font-size: 4.8rem;
+  }
+  .animal-name {
+    font-size: 1.8rem;
+  }
+  .game-callout-btn {
+    font-size: 0.84rem;
+    padding: 8px 14px;
+  }
+  .btn-pill {
+    padding: 14px 26px;
+    font-size: 1.1rem;
+  }
+  .farm-landscape {
+    height: 440px;
+  }
+  .animal-sprite {
+    font-size: 2.8rem;
   }
 }
